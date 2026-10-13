@@ -106,3 +106,15 @@ def test_recent_api_window_deduplicates_crosslists(config, monkeypatch):
     assert len(papers) == 1
     assert papers[0].authors[0].name == "A"
     assert "submittedDate:[" in calls[0]["search_query"]
+
+
+def test_keyword_overflow_is_rendered_as_ranked_recommendations(config):
+    from zotero_arxiv_daily.executor import Executor
+    config.executor.pin_keywords = ["game"]
+    config.executor.max_pinned_num = 1
+    executor = object.__new__(Executor)
+    executor.config = config
+    first, second = paper(score=6.0), paper(title="Another game agent", score=5.0)
+    pinned, ranked = executor._select_pinned([first, second])
+    assert pinned == [first] and ranked == [second]
+    assert first.pinned and not second.pinned

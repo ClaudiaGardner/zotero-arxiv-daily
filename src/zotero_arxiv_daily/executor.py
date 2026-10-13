@@ -292,6 +292,8 @@ class Executor:
         cap = self._max_pinned_num()
         if len(pinned) > cap:
             overflow = pinned[cap:]
+            for paper in overflow:
+                paper.pinned = False
             pinned = pinned[:cap]
             # papers is score-sorted, so overflow entries are the lower-scored
             # matches; prepending keeps remaining score-sorted for the top-N slice.
