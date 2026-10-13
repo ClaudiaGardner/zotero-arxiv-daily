@@ -191,11 +191,12 @@ class Executor:
         self._enrich_papers(email_papers)
         logger.info("Sending email...")
         email_content = render_email(email_papers)
+        from pathlib import Path
+        target = Path("outputs/daily-papers.html")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        preview = email_content.standalone() if hasattr(email_content, "standalone") else email_content
+        target.write_text(preview, encoding="utf-8")
         if self.config.executor.get("preview", False):
-            from pathlib import Path
-            target = Path("outputs/daily-papers.html")
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(email_content, encoding="utf-8")
             logger.info("Preview saved: {} ({} papers)", target, len(email_papers))
             return
         send_email(self.config, email_content)

@@ -104,7 +104,7 @@ jobs:
             await persistSentDoiState({ github, context, core });
 
       - name: Upload email preview
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview }}
+        if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
           name: daily-papers-preview

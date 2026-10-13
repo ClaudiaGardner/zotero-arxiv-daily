@@ -22,8 +22,8 @@ llm:
   max_input_tokens: 16000
   generation_kwargs:
     model: deepseek-v4-pro
-    max_tokens: 12000
-    reasoning_effort: high
+    max_tokens: 16000
+    reasoning_effort: low
     extra_body:
       thinking:
         type: enabled

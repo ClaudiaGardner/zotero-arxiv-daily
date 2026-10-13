@@ -10,16 +10,21 @@ from .protocol import Paper
 
 
 def fetch_reading_text(paper: Paper) -> str | None:
+    html_text = None
     match = re.search(r"arxiv\.org/(?:abs|pdf)/([^?#]+)", paper.url)
     if match:
         paper_id = match.group(1).removesuffix(".pdf")
         try:
             response = requests.get(f"https://arxiv.org/html/{paper_id}", timeout=(8, 25))
             response.raise_for_status()
+            from .paper_figures import html_main_figure
+            paper.main_figure = html_main_figure(response.text, response.url)
             text = trafilatura.extract(response.text, include_tables=True, include_comments=False)
             if text and len(text) > 1500:
+                html_text = text
                 paper.reading_basis = "正文（arXiv HTML；长文按方法、实验等段落选取）"
-                return text
+                if paper.main_figure is not None:
+                    return text
         except (requests.RequestException, ValueError):
             pass
     if paper.pdf_url:
@@ -34,14 +39,20 @@ def fetch_reading_text(paper: Paper) -> str | None:
                     if len(content) > 25 * 1024 * 1024:
                         raise ValueError("PDF exceeds reading download limit")
             with pymupdf.open(stream=bytes(content), filetype="pdf") as document:
+                from .paper_figures import pdf_main_figure
+                if paper.main_figure is None:
+                    paper.main_figure = pdf_main_figure(document, paper.pdf_url)
                 # Read the main paper and the last pages for limitations/conclusions.
                 pages = sorted(set(range(min(24, len(document)))) | set(range(max(0, len(document) - 3), len(document))))
                 text = "\n\n".join(document[p].get_text(sort=True) for p in pages)
             if len(text.strip()) > 1500:
-                paper.reading_basis = "全文片段（PDF，含主要正文及末尾页面）"
-                return text
+                if html_text is None:
+                    paper.reading_basis = "全文片段（PDF，含主要正文及末尾页面）"
+                return html_text or text
         except (requests.RequestException, ValueError, RuntimeError):
             pass
+    if html_text:
+        return html_text
     paper.reading_basis = "仅摘要（全文未取得）"
     logger.info("Detailed reading uses abstract only: {}", paper.title)
     return None

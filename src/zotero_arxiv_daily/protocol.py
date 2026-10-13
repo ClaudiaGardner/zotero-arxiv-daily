@@ -35,6 +35,15 @@ RawPaperItem = TypeVar("RawPaperItem")
 
 
 @dataclass
+class PaperFigure:
+    content: bytes
+    mime_type: str
+    caption: str
+    url: str
+    cid: str = ""
+
+
+@dataclass
 class Paper:
     """Mutable paper record enriched throughout the recommendation pipeline."""
 
@@ -56,6 +65,7 @@ class Paper:
     venue_citation_proxy: float | None = None
     journal: str | None = None
     reading_basis: str | None = None
+    main_figure: PaperFigure | None = None
 
     def generate_tldr_and_affiliations(
         self,

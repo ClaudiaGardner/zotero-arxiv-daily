@@ -63,6 +63,9 @@ If only an abstract is available, still explain its actual method and reported e
         f"Title:\n{paper.title.strip()}",
         f"Abstract:\n{abstract}",
     ]
+    figure = getattr(paper, "main_figure", None)
+    if detailed and figure is not None:
+        prompt_sections.append(f"Selected main figure caption (describe only what this caption supports):\n{figure.caption}")
     encoding = tiktoken.encoding_for_model("gpt-4o")
     max_tokens = int(llm_params.get("max_input_tokens", 16000)) if detailed else _MAX_PROMPT_TOKENS
     if paper.full_text is not None and paper.full_text.strip():

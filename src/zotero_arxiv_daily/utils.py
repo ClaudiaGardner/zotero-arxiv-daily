@@ -6,6 +6,8 @@ import smtplib
 from collections import Counter
 from email.header import Header
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from email.utils import parseaddr, formataddr
 from loguru import logger
 import datetime
@@ -149,7 +151,17 @@ def send_email(config:DictConfig, html:str):
         name, addr = parseaddr(s)
         return formataddr((Header(name, 'utf-8').encode(), addr))
 
-    msg = MIMEText(html, 'html', 'utf-8')
+    images = getattr(html, "inline_images", [])
+    if images:
+        msg = MIMEMultipart("related")
+        msg.attach(MIMEText(str(html), "html", "utf-8"))
+        for cid, data, mime in images:
+            image = MIMEImage(data, _subtype=mime.split("/", 1)[-1])
+            image.add_header("Content-ID", f"<{cid}>")
+            image.add_header("Content-Disposition", "inline", filename=f"{cid}.jpg")
+            msg.attach(image)
+    else:
+        msg = MIMEText(str(html), 'html', 'utf-8')
     msg['From'] = _format_addr('Github Action <%s>' % sender)
     msg['To'] = _format_addr('You <%s>' % receiver)
     today = datetime.datetime.now().strftime('%Y/%m/%d')

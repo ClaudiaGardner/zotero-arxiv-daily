@@ -2,6 +2,20 @@ from .protocol import Paper
 import math
 from html import escape
 import re
+import base64
+
+
+class EmailHTML(str):
+    def __new__(cls, content, inline_images=()):
+        value = super().__new__(cls, content)
+        value.inline_images = list(inline_images)
+        return value
+
+    def standalone(self):
+        content = str(self)
+        for cid, data, mime in self.inline_images:
+            content = content.replace(f"cid:{cid}", f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}")
+        return content
 
 
 def format_digest(text):
@@ -82,6 +96,7 @@ def get_block_html(
     pdf_url: str,
     affiliations: str | None = None,
     pinned: bool = False,
+    figure_html: str = "",
 ) -> str:
     badge = _PIN_BADGE if pinned else ''
     block_template = """
@@ -97,6 +112,9 @@ def get_block_html(
             <br>
             <i>{affiliations}</i>
         </td>
+    </tr>
+    <tr>
+        <td>{figure_html}</td>
     </tr>
     <tr>
         <td style="font-size: 14px; color: #333; padding: 8px 0;">
@@ -116,7 +134,7 @@ def get_block_html(
     </tr>
 </table>
 """
-    return block_template.format(badge=badge, title=title, authors=authors,rate=rate, tldr=format_digest(tldr), pdf_url=pdf_url, affiliations=affiliations)
+    return block_template.format(badge=badge, title=title, authors=authors,rate=rate, tldr=format_digest(tldr), pdf_url=pdf_url, affiliations=affiliations, figure_html=figure_html)
 
 def get_stars(score:float):
     full_star = '<span class="full-star">⭐</span>'
@@ -159,7 +177,13 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
     if p.source == "huggingface":
         paper_id = p.url.rsplit("/", 1)[-1]
         paper_link += '<a href="https://huggingface.co/papers/' + escape(paper_id, quote=True) + '">Hugging Face 讨论</a>'
-    return paper_link + get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned)
+    figure_html = ""
+    if p.main_figure is not None:
+        figure = p.main_figure
+        figure_html = ('<div style="margin:12px 0;"><a href="' + escape(figure.url, quote=True) + '">'
+                       '<img src="cid:' + figure.cid + '" alt="论文主图" style="display:block;width:100%;max-width:800px;height:auto;"></a>'
+                       '<div style="font-size:12px;line-height:1.6;color:#666;margin-top:8px;">原文图注：' + escape(figure.caption) + '</div></div>')
+    return paper_link + get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned, figure_html=figure_html)
 
 
 def render_email(papers:list[Paper]) -> str:
@@ -173,6 +197,11 @@ def render_email(papers:list[Paper]) -> str:
     others = [p for p in papers if not getattr(p, "pinned", False)]
 
     parts = []
+    images = []
+    for index, paper in enumerate(papers):
+        if paper.main_figure:
+            paper.main_figure.cid = f"paper-figure-{index}"
+            images.append((paper.main_figure.cid, paper.main_figure.content, paper.main_figure.mime_type))
     if pinned:
         parts.append(_SECTION_HEADER.format(text="&#128204; Pinned by keywords"))
         parts.extend(_render_paper_block(p, pinned=True) for p in pinned)
@@ -181,4 +210,4 @@ def render_email(papers:list[Paper]) -> str:
     parts.extend(_render_paper_block(p, pinned=False) for p in others)
 
     content = '<br>' + '</br><br>'.join(parts) + '</br>'
-    return framework.replace('__CONTENT__', content)
+    return EmailHTML(framework.replace('__CONTENT__', content), images)
