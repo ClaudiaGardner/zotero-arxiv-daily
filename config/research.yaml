@@ -30,6 +30,8 @@ source:
     category: [cs.AI, cs.HC, cs.LG, cs.CL, cs.CV, cs.MA, cs.RO]
     include_cross_list: true
     rss_metadata: true
+    rss_fallback_days: 7
+    rss_fallback_max_per_category: 80
   huggingface:
     lookback_days: 3
   conferences:

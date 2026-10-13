@@ -69,3 +69,40 @@ def test_qq_465_uses_ssl_directly(config, monkeypatch):
     monkeypatch.setattr(smtplib, "SMTP", lambda *a, **k: (_ for _ in ()).throw(AssertionError("Port 465 must use SSL")))
     send_email(config, "<html>hello</html>")
     assert len(sent) == 1
+
+
+def test_empty_rss_uses_recent_api_window(config, monkeypatch):
+    from omegaconf import open_dict
+    from zotero_arxiv_daily.retriever import arxiv_retriever as module
+    from types import SimpleNamespace
+
+    with open_dict(config):
+        config.source.arxiv.rss_metadata = True
+        config.source.arxiv.rss_fallback_days = 7
+    monkeypatch.setattr(module.feedparser, "parse", lambda _: SimpleNamespace(feed=SimpleNamespace(title="cs.AI updates"), entries=[]))
+    called = []
+    monkeypatch.setattr(module.ArxivRetriever, "_recent_api_papers", lambda self: called.append(True) or ["recent paper"])
+    assert module.ArxivRetriever(config)._retrieve_raw_papers() == ["recent paper"]
+    assert called == [True]
+
+
+def test_recent_api_window_deduplicates_crosslists(config, monkeypatch):
+    from omegaconf import open_dict
+    from zotero_arxiv_daily.retriever import arxiv_retriever as module
+
+    with open_dict(config):
+        config.source.arxiv.rss_fallback_days = 7
+    calls = []
+    atom = b'<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2610.12345v1</id><title>Game agent</title><summary>World models</summary><published>2026-10-09T00:00:00Z</published><author><name>A</name></author></entry></feed>'
+    class Response:
+        content = atom
+        def raise_for_status(self): pass
+    def get(url, *, params, timeout):
+        calls.append(params)
+        return Response()
+    monkeypatch.setattr(module.requests, "get", get)
+    monkeypatch.setattr(module, "sleep", lambda _: None)
+    papers = module.ArxivRetriever(config)._recent_api_papers()
+    assert len(papers) == 1
+    assert papers[0].authors[0].name == "A"
+    assert "submittedDate:[" in calls[0]["search_query"]

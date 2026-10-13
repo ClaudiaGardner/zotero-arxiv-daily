@@ -143,6 +143,8 @@ class ArxivRetriever(BaseRetriever):
                     pdf_url=f"https://arxiv.org/pdf/{paper_id}",
                     journal_ref=None, comment=None,
                 ))
+            if not raw and self.retriever_config.get("rss_fallback_days", 0):
+                raw = self._recent_api_papers()
             return raw[:10] if self.config.executor.debug else raw
         all_paper_ids = [
             i.id.removeprefix("oai:arXiv.org:")
@@ -176,6 +178,42 @@ class ArxivRetriever(BaseRetriever):
         bar.close()
 
         return raw_papers
+
+    def _recent_api_papers(self):
+        """Cover the RSS publication gap and weekends with a bounded API window."""
+        from datetime import datetime, timedelta, timezone
+        from types import SimpleNamespace
+
+        now = datetime.now(timezone.utc)
+        since = now - timedelta(days=int(self.retriever_config.rss_fallback_days))
+        window = f"submittedDate:[{since:%Y%m%d}0000 TO {now:%Y%m%d}2359]"
+        raw = []
+        seen = set()
+        for category in self.retriever_config.category:
+            try:
+                response = requests.get("https://export.arxiv.org/api/query", params={
+                    "search_query": f"cat:{category} AND {window}",
+                    "max_results": self.retriever_config.get("rss_fallback_max_per_category", 80),
+                    "sortBy": "submittedDate", "sortOrder": "descending",
+                }, timeout=(10, 40))
+                response.raise_for_status()
+                feed = feedparser.parse(response.content)
+                for entry in feed.entries:
+                    if "published" not in entry or entry.id in seen:
+                        continue
+                    seen.add(entry.id)
+                    raw.append(SimpleNamespace(
+                        title=entry.title, summary=entry.summary,
+                        authors=[SimpleNamespace(name=a.name) for a in entry.get("authors", [])],
+                        entry_id=entry.id.replace("http://", "https://"),
+                        pdf_url=entry.id.replace("http://", "https://").replace("/abs/", "/pdf/"),
+                        journal_ref=entry.get("arxiv_journal_ref"), comment=entry.get("arxiv_comment"),
+                    ))
+            except requests.RequestException as error:
+                logger.warning("arXiv API fallback unavailable for {} ({})", category, type(error).__name__)
+            sleep(3)
+        logger.info("arXiv RSS was empty; API fallback retrieved {} recent papers", len(raw))
+        return raw
 
     def convert_to_paper(self, raw_paper: ArxivResult) -> Paper:
         title = raw_paper.title
