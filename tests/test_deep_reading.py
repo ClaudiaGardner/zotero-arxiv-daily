@@ -50,3 +50,21 @@ def test_sectioned_email_escapes_generated_html():
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
     assert "Win rate 72%" in html
+
+
+def test_pdf_reading_runs_on_calling_thread_before_parallel_generation(monkeypatch):
+    import threading
+    from zotero_arxiv_daily import deep_reading
+    from zotero_arxiv_daily.final_enrichment import enrich_final_papers
+    caller = threading.get_ident()
+    reads = []
+    def read(paper):
+        assert threading.get_ident() == caller
+        reads.append(paper.title)
+        return "Full paper text"
+    monkeypatch.setattr(deep_reading, "fetch_reading_text", read)
+    papers = [make_sample_paper(title=str(i), full_text=None) for i in range(3)]
+    client, calls = make_recording_client()
+    enrich_final_papers(papers, {}, client, {"analysis_depth": "detailed"}, workers=3)
+    assert reads == ["0", "1", "2"]
+    assert len(calls) == 3

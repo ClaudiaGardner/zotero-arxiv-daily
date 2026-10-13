@@ -28,14 +28,19 @@ def enrich_final_papers(
         return []
 
     worker_count = max(1, min(workers, len(papers)))
+    detailed = llm_params.get("analysis_depth") == "detailed"
+    if detailed:
+        from .deep_reading import fetch_reading_text
+        # PyMuPDF does not support concurrent threads. Read PDFs on the caller
+        # thread before launching the concurrent LLM requests.
+        for paper in papers:
+            if paper.full_text is None or not paper.full_text.strip():
+                paper.full_text = fetch_reading_text(paper)
 
     def enrich_one(paper: Paper) -> Paper:
-        if paper.full_text is None or not paper.full_text.strip():
-            if llm_params.get("analysis_depth") == "detailed":
-                from .deep_reading import fetch_reading_text
-                paper.full_text = fetch_reading_text(paper)
+        if not detailed and (paper.full_text is None or not paper.full_text.strip()):
             retriever = retrievers.get(paper.source)
-            if retriever is not None and llm_params.get("analysis_depth") != "detailed":
+            if retriever is not None:
                 try:
                     paper.full_text = retriever.fetch_full_text(paper)
                 except Exception as error:
