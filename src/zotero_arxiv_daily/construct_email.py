@@ -183,6 +183,8 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
         figure_html = ('<div style="margin:12px 0;"><a href="' + escape(figure.url, quote=True) + '">'
                        '<img src="cid:' + figure.cid + '" alt="论文主图" style="display:block;width:100%;max-width:800px;height:auto;"></a>'
                        '<div style="font-size:12px;line-height:1.6;color:#666;margin-top:8px;">原文图注：' + escape(figure.caption) + '</div></div>')
+    elif p.reading_basis is not None:
+        figure_html = '<div style="font-size:12px;color:#666;">未取得可用主图，可通过文末 PDF 链接查看原文。</div>'
     return paper_link + get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned, figure_html=figure_html)
 
 

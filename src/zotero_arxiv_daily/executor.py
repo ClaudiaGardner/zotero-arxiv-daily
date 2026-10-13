@@ -179,7 +179,10 @@ class Executor:
             # that low-scored-but-keyword-matched papers are still surfaced.
             pinned_papers, reranked_papers = self._select_pinned(reranked_papers)
             reranked_papers = self._apply_min_score(reranked_papers)
-            reranked_papers = reranked_papers[:self.config.executor.max_paper_num]
+            limit = self.config.executor.max_paper_num
+            if preferences.get("digest_size") is not None:
+                limit = max(0, int(preferences.digest_size) - len(pinned_papers))
+            reranked_papers = reranked_papers[:limit]
         email_papers = pinned_papers + reranked_papers
         if len(all_papers) > 0:
             if len(email_papers) == 0 and not self.config.executor.send_empty:

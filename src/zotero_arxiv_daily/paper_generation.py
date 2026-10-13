@@ -148,6 +148,9 @@ def generate_tldr_and_affiliations(
         )
         fallback = (paper.abstract or "").strip()
         paper.tldr = paper.abstract if fallback else GENERATION_FAILED_TLDR
+        if llm_params.get("analysis_depth") == "detailed":
+            basis = getattr(paper, "reading_basis", None) or ("全文片段" if full_text.strip() else "仅摘要")
+            paper.tldr = f"【阅读依据】{basis}\n\n【解读状态】深度解读生成未完成。\n\n【原摘要】{fallback or '无可用摘要'}"
         paper.affiliations = None
         return paper.tldr, None
 

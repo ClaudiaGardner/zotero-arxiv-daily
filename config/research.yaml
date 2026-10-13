@@ -84,6 +84,7 @@ sent_doi_state:
   key: ${oc.env:SENT_DOI_STATE_KEY}
 
 research:
+  digest_size: 25
   abstract_only: false
   conference_bonus: 0.8
   max_journal_papers: 2
