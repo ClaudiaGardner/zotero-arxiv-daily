@@ -31,8 +31,11 @@ def enrich_final_papers(
 
     def enrich_one(paper: Paper) -> Paper:
         if paper.full_text is None or not paper.full_text.strip():
+            if llm_params.get("analysis_depth") == "detailed":
+                from .deep_reading import fetch_reading_text
+                paper.full_text = fetch_reading_text(paper)
             retriever = retrievers.get(paper.source)
-            if retriever is not None:
+            if retriever is not None and llm_params.get("analysis_depth") != "detailed":
                 try:
                     paper.full_text = retriever.fetch_full_text(paper)
                 except Exception as error:

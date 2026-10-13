@@ -55,6 +55,7 @@ class Paper:
     is_preprint: bool | None = None
     venue_citation_proxy: float | None = None
     journal: str | None = None
+    reading_basis: str | None = None
 
     def generate_tldr_and_affiliations(
         self,

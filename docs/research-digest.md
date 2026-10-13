@@ -14,8 +14,9 @@
 - Crossref 会议检索限定最近三十天发表的 proceedings，避免将旧论文的元数据更新当成新论文。列表每个会议每次最多一百条，不保证覆盖全部会议论文。
 - 会议来源包括 CHI、UIST、NeurIPS、ICML、ICLR、AAAI、IJCAI、ACL、EMNLP、CVPR、ICCV、ECCV、ACM MM、AAMAS、CoRL；实际覆盖取决于公开源的收录情况。
 - 有会议出处证据的论文获得排序加成；arXiv 和 Hugging Face 本身不表示会议录用。
-- 每期最多二十篇推荐加五篇关键词置顶；相似度过低的论文不填充名额，期刊最多两篇。
-- DeepSeek `deepseek-flash` 基于摘要生成简体中文一句话总结。不下载全文，缺失摘要时明确标记。
+- 每期最多八篇推荐加两篇关键词置顶；相似度过低的论文不填充名额，期刊最多两篇。
+- DeepSeek `deepseek-v4-pro` 优先依据 arXiv HTML/PDF 正文生成简体中文深度解读，目标每篇约六百至九百字。内容覆盖问题、方法、创新、实验数字与消融、局限、研究启发和阅读建议。
+- 长论文优先选取方法、实验、结果和局限段落，输入上限一万六千 token；PDF 读取前二十四页及末尾三页。邮件明确标注实际阅读依据，全文无法取得时回退为摘要，并说明未能核验的细节。
 - arXiv、HF、会议之间按论文标识和标题去重；已成功发送的论文标识存储为 Fernet 加密状态。
 - 没有新推荐时仍发送一封空日报。预览不发送邮件，也不更新已发送状态。
 
@@ -35,6 +36,7 @@ https://github.com/ClaudiaGardner/zotero-arxiv-daily/settings/secrets/actions/ne
 
 - `preview=true`：生成邮件 HTML，下载 `daily-papers-preview` Artifact 查看。
 - `preview=false`：真实发信，需已有 `SENDER_PASSWORD`。
+- `refresh_digest=true`：手动生成改版样例，允许重新解读已发送过的近期论文。默认关闭，不影响日常去重。
 
 “Keep Alive” 工作流定期提交维护记录，避免公开仓库长期无活动导致定时任务停用。
 

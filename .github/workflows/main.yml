@@ -6,6 +6,10 @@ on:
         description: 'Generate an HTML preview without sending email'
         type: boolean
         default: true
+      refresh_digest:
+        description: 'Re-analyze recent papers including already sent papers for a revised digest'
+        type: boolean
+        default: false
   schedule:
     - cron: '0 9 * * *'
       timezone: 'Asia/Shanghai'
@@ -72,6 +76,7 @@ jobs:
           SENT_DOI_STATE_KEY: ${{ secrets.SENT_DOI_STATE_KEY }}
           CUSTOM_CONFIG: ${{ vars.CUSTOM_CONFIG }}
           PREVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.preview || false }}
+          REFRESH_DIGEST: ${{ github.event_name == 'workflow_dispatch' && inputs.refresh_digest || false }}
         run: |
           if [ "$PREVIEW" != "true" ] && [ -z "$SENDER_PASSWORD" ]; then
             echo "::error::Missing SENDER_PASSWORD: add the sender mailbox SMTP authorization code in repository Secrets."
@@ -80,6 +85,7 @@ jobs:
           printf "%s\n" "$CUSTOM_CONFIG" > config/custom.yaml
           uv run --locked src/zotero_arxiv_daily/main.py \
             "+executor.preview=$PREVIEW" \
+            "+executor.refresh_digest=$REFRESH_DIGEST" \
             '++sent_doi_state.enabled="${oc.decode:${oc.env:SENT_DOI_STATE_ENABLED}}"' \
             '++sent_doi_state.path=.state/sent-dois.fernet' \
             '++sent_doi_state.key=${oc.env:SENT_DOI_STATE_KEY}'

@@ -1,6 +1,24 @@
 from .protocol import Paper
 import math
 from html import escape
+import re
+
+
+def format_digest(text):
+    if not text:
+        return "暂无解读"
+    if "【" not in text:
+        return escape(text).replace("\n", "<br>")
+    parts = re.split(r"(【[^】\n]{1,30}】)", text)
+    html = []
+    for part in parts:
+        if not part.strip():
+            continue
+        if part.startswith("【") and part.endswith("】"):
+            html.append('<div style="margin-top:14px;color:#243b53;font-weight:bold;">' + escape(part) + '</div>')
+        else:
+            html.append('<div style="line-height:1.8;margin-top:4px;">' + escape(part.strip()).replace("\n", "<br>") + '</div>')
+    return "".join(html)
 
 
 framework = """
@@ -87,7 +105,7 @@ def get_block_html(
     </tr>
     <tr>
         <td style="font-size: 14px; color: #333; padding: 8px 0;">
-            <strong>TLDR:</strong> {tldr}
+            <strong>论文解读：</strong> {tldr}
         </td>
     </tr>
 
@@ -98,7 +116,7 @@ def get_block_html(
     </tr>
 </table>
 """
-    return block_template.format(badge=badge, title=title, authors=authors,rate=rate, tldr=tldr, pdf_url=pdf_url, affiliations=affiliations)
+    return block_template.format(badge=badge, title=title, authors=authors,rate=rate, tldr=format_digest(tldr), pdf_url=pdf_url, affiliations=affiliations)
 
 def get_stars(score:float):
     full_star = '<span class="full-star">⭐</span>'

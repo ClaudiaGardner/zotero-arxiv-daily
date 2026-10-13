@@ -159,7 +159,8 @@ class Executor:
         if preferences:
             from .research_preferences import deduplicate_research_papers
             all_papers = deduplicate_research_papers(all_papers)
-        all_papers = filter_sent_paper_candidates(all_papers, sent_identities)
+        if not self.config.executor.get("refresh_digest", False):
+            all_papers = filter_sent_paper_candidates(all_papers, sent_identities)
         self.pipeline_enrichers.enrich_before_rerank(all_papers)
         logger.info(f"Total {len(all_papers)} papers retrieved from all sources")
         reranked_papers: list[Paper] = []

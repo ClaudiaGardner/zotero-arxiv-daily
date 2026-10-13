@@ -1,0 +1,52 @@
+import json
+
+import requests
+import tiktoken
+
+from tests import make_recording_client
+from tests.canned_responses import make_sample_paper
+from zotero_arxiv_daily.paper_generation import _build_messages
+from zotero_arxiv_daily.deep_reading import fetch_reading_text, full_text_excerpt
+from zotero_arxiv_daily.construct_email import format_digest
+
+
+def test_detailed_digest_requests_methods_metrics_limitations_and_preserves_basis():
+    paper = make_sample_paper(full_text="Full paper: Method M beats baseline by 12% on game G.")
+    paper.reading_basis = "Full text"
+    client, calls = make_recording_client(json.dumps({"tldr": "【核心方法】M\n【实验与证据】12% on G", "affiliations": []}))
+    digest, _ = paper.generate_tldr_and_affiliations(client, {"analysis_depth": "detailed"})
+    prompt = calls[0]["messages"][1]["content"]
+    assert "【核心方法】" in prompt and "【实验与证据】" in prompt and "【局限与边界】" in prompt
+    assert "Do not invent numbers" in prompt
+    assert digest.startswith("【阅读依据】Full text")
+    assert len(calls) == 1
+
+
+def test_full_text_excerpt_includes_late_results_instead_of_only_intro():
+    encoding = tiktoken.encoding_for_model("gpt-4o")
+    text = "Introduction\n" + "intro " * 15000 + "\n4 Experiments\nRESULT_MARKER\nWin rate 72%.\n5 Limitations\nLIMIT_MARKER\nOnly tested in one game."
+    excerpt = full_text_excerpt(text, encoding, 3000)
+    assert "RESULT_MARKER" in excerpt and "LIMIT_MARKER" in excerpt
+    assert len(encoding.encode(excerpt)) <= 3000
+
+
+def test_detailed_prompt_keeps_results_within_input_budget():
+    paper = make_sample_paper(full_text="intro " * 20000 + "\n4 Experiments\nRESULT_MARKER\nWinning rate 72%.")
+    messages = _build_messages(paper, {"analysis_depth": "detailed", "max_input_tokens": 4000})
+    assert "RESULT_MARKER" in messages[1]["content"]
+    assert len(tiktoken.encoding_for_model("gpt-4o").encode(messages[1]["content"])) <= 4000
+
+
+def test_failed_fulltext_is_marked_abstract_only(monkeypatch):
+    def unavailable(*a, **k): raise requests.ConnectionError("unavailable")
+    monkeypatch.setattr(requests, "get", unavailable)
+    paper = make_sample_paper(url="https://arxiv.org/abs/2610.12345", pdf_url="https://arxiv.org/pdf/2610.12345")
+    assert fetch_reading_text(paper) is None
+    assert paper.reading_basis == "仅摘要（全文未取得）"
+
+
+def test_sectioned_email_escapes_generated_html():
+    html = format_digest("【核心方法】\n<script>bad()</script>\n【实验与证据】\nWin rate 72%")
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+    assert "Win rate 72%" in html
