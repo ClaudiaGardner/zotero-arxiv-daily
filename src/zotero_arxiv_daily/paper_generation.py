@@ -49,6 +49,7 @@ The tldr JSON string must contain ALL of the following sections, separated by ne
 【核心方法】Explain inputs, outputs, architecture/modules, training or inference procedure and the mechanism that makes it work. For an HCI study explain participants, study design and interaction mechanism.
 【创新与差异】Explain the specific difference from named baselines or prior methods when the supplied text supports it.
 【实验与证据】Name datasets/environments, baselines, metrics, quantitative results and relevant ablations, with table/section references when available. Preserve units and denominators. Do not invent numbers. If evidence is missing say 未报告 or 当前材料未提供.
+【讨论 Discussion】Explain why the mechanism and results matter, which assumptions the conclusions depend on, practical tradeoffs and which settings the method is suited to. Separate author interpretation from your own inference, explicitly marking the latter as 推测. Do not simply repeat the numerical results.
 【局限与边界】Explain what was tested and what remains untested. Distinguish author-reported limitations from your own plausible concerns, explicitly marking the latter as 推测.
 【对你的启发】Give concrete, technically actionable connections to the reader's relevant research interests; do not force unrelated fields into the connection.
 【阅读建议】Recommend specific sections, figures/tables or released resources found in the supplied text, and a concrete reason to read or skip the paper.

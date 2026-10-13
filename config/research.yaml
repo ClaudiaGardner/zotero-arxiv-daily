@@ -72,10 +72,10 @@ executor:
   source: [conferences, huggingface, arxiv]
   reranker: local
   send_empty: true
-  max_paper_num: 8
+  max_paper_num: 20
   min_score: 3.5
   pin_keywords: [game agent, gaming agent, video game agent, world model, human-agent interaction, human-ai interaction]
-  max_pinned_num: 2
+  max_pinned_num: 5
   enrich_workers: 3
 
 sent_doi_state:
