@@ -14,7 +14,7 @@ class EmailHTML(str):
     def standalone(self):
         content = str(self)
         for cid, data, mime in self.inline_images:
-            content = content.replace(f"cid:{cid}", f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}")
+            content = content.replace(f'src="cid:{cid}"', f'src="data:{mime};base64,{base64.b64encode(data).decode("ascii")}"')
         return content
 
 

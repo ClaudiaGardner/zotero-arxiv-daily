@@ -42,3 +42,13 @@ def test_inline_image_attachments_match_html_cids(config, monkeypatch):
     assert len(figures) == 1
     assert figures[0]["Content-ID"] == "<paper-figure-0>"
     assert figures[0].get_payload(decode=True) == paper.main_figure.content
+
+
+def test_preview_image_ids_with_shared_prefixes_remain_distinct():
+    from zotero_arxiv_daily.construct_email import EmailHTML
+    import base64
+    content = EmailHTML('<img src="cid:paper-figure-1"><img src="cid:paper-figure-10">',
+                        [("paper-figure-1", b"first", "image/jpeg"), ("paper-figure-10", b"tenth", "image/jpeg")])
+    preview = content.standalone()
+    assert base64.b64encode(b"first").decode() + '"' in preview
+    assert base64.b64encode(b"tenth").decode() + '"' in preview
