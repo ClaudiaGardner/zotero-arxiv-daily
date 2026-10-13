@@ -68,3 +68,13 @@ def test_pdf_reading_runs_on_calling_thread_before_parallel_generation(monkeypat
     enrich_final_papers(papers, {}, client, {"analysis_depth": "detailed"}, workers=3)
     assert reads == ["0", "1", "2"]
     assert len(calls) == 3
+
+
+def test_concise_academic_note_contains_only_requested_sections():
+    paper = make_sample_paper(full_text="Method M addresses inefficient game planning.")
+    text = "【Motivation】Planning is inefficient.\n【核心方法】M plans with a learned model.\n【创新点】M reuses predicted states.\n【讨论】Unrequested discussion."
+    client, _ = make_recording_client(json.dumps({"tldr": text, "affiliations": []}))
+    digest, _ = paper.generate_tldr_and_affiliations(client, {"analysis_depth": "detailed", "digest_format": "concise_academic"})
+    assert digest.count("【") == 3
+    assert "M plans with a learned model." in digest
+    assert "Unrequested discussion" not in digest

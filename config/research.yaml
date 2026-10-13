@@ -19,10 +19,11 @@ llm:
   thinking: null
   language: 简体中文
   analysis_depth: detailed
+  digest_format: concise_academic
   max_input_tokens: 16000
   generation_kwargs:
     model: deepseek-v4-pro
-    max_tokens: 16000
+    max_tokens: 8000
     reasoning_effort: low
     extra_body:
       thinking:

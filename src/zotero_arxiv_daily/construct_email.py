@@ -173,6 +173,8 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
     paper_link = '<div style="margin:6px 0;color:#666;font-size:13px;">来源：' + source
     if metadata:
         paper_link += ' · ' + metadata
+    if p.reading_basis is not None and not (p.tldr or "").startswith("【阅读依据】"):
+        paper_link += ' · 阅读依据：' + escape(p.reading_basis)
     paper_link += ' · <a href="' + escape(p.url, quote=True) + '">论文页面</a></div>'
     if p.source == "huggingface":
         paper_id = p.url.rsplit("/", 1)[-1]

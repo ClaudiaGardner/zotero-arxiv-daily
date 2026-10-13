@@ -15,7 +15,7 @@
 - 会议来源包括 CHI、UIST、NeurIPS、ICML、ICLR、AAAI、IJCAI、ACL、EMNLP、CVPR、ICCV、ECCV、ACM MM、AAMAS、CoRL；实际覆盖取决于公开源的收录情况。
 - 有会议出处证据的论文获得排序加成；arXiv 和 Hugging Face 本身不表示会议录用。
 - 每期合计最多二十五篇，其中最多五篇关键词置顶；置顶不足五篇时由其他高相关论文补足。相似度过低的论文不填充名额，期刊最多两篇。
-- DeepSeek `deepseek-v4-pro` 优先依据 arXiv HTML/PDF 正文生成简体中文深度解读，目标每篇约六百至九百字。内容明确覆盖 Motivation、Method、创新、实验数字与消融、Discussion、局限、研究启发和阅读建议。
+- DeepSeek `deepseek-v4-pro` 优先依据 arXiv HTML/PDF 正文生成简体中文学术解读，目标每篇约二百八十至四百五十字。正文只包含 Motivation、方法、创新点三部分，使用直白、简洁、干练的学术语言。
 - 长论文优先选取方法、实验、结果和局限段落，输入上限一万六千 token；PDF 读取前二十四页及末尾三页。邮件明确标注实际阅读依据，全文无法取得时回退为摘要，并说明未能核验的细节。
 - 每篇优先选择能说明框架、方法或整体流程的一张主图。优先使用论文 HTML 图片，必要时从 PDF 前六页按图注定位并裁剪，保留原文图注；无法可靠取得时不插图。图片作为 CID 内嵌附件随邮件发送，单图压缩到约四百 KB，预览 HTML 使用内嵌图片数据。
 - arXiv、HF、会议之间按论文标识和标题去重；已成功发送的论文标识存储为 Fernet 加密状态。
