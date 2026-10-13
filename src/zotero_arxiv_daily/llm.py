@@ -211,6 +211,12 @@ def _request_llm(
                             },
                         }
                         generation_kwargs["tools"] = [paper_digest_tool]
+                    elif llm_params.get("structured_output_format") == "json_object":
+                        generation_kwargs["response_format"] = {"type": "json_object"}
+                        messages = list(messages) + [{
+                            "role": "user",
+                            "content": 'Return exactly one JSON object with these keys: {"tldr": "summary", "affiliations": []}. Do not add other keys or invent affiliations.',
+                        }]
                     else:
                         generation_kwargs["response_format"] = {
                             "type": "json_schema",

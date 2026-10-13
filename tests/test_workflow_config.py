@@ -80,7 +80,7 @@ def test_main_workflow_has_exact_shanghai_daily_schedule() -> None:
 
     # When its schedule is inspected, then it uses the requested local time.
     assert trigger["schedule"] == [
-        {"cron": "07 4 * * *", "timezone": "Asia/Shanghai"}
+        {"cron": "0 9 * * *", "timezone": "Asia/Shanghai"}
     ]
     assert "workflow_dispatch" in trigger
 

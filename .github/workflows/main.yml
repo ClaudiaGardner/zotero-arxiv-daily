@@ -1,8 +1,13 @@
 name: Send emails daily
 on:
   workflow_dispatch:
+    inputs:
+      preview:
+        description: 'Generate an HTML preview without sending email'
+        type: boolean
+        default: true
   schedule:
-    - cron: '07 4 * * *'
+    - cron: '0 9 * * *'
       timezone: 'Asia/Shanghai'
 
 concurrency:
@@ -12,6 +17,7 @@ concurrency:
 jobs:
   calculate-and-send:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     permissions:
       contents: write
     steps:
@@ -65,9 +71,15 @@ jobs:
           SENT_DOI_STATE_ENABLED: ${{ vars.SENT_DOI_STATE_ENABLED || 'false' }}
           SENT_DOI_STATE_KEY: ${{ secrets.SENT_DOI_STATE_KEY }}
           CUSTOM_CONFIG: ${{ vars.CUSTOM_CONFIG }}
+          PREVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.preview || false }}
         run: |
-          printf "%b\n" "$CUSTOM_CONFIG" > config/custom.yaml
+          if [ "$PREVIEW" != "true" ] && [ -z "$SENDER_PASSWORD" ]; then
+            echo "::error::Missing SENDER_PASSWORD: add the sender mailbox SMTP authorization code in repository Secrets."
+            exit 1
+          fi
+          printf "%s\n" "$CUSTOM_CONFIG" > config/custom.yaml
           uv run --locked src/zotero_arxiv_daily/main.py \
+            "+executor.preview=$PREVIEW" \
             '++sent_doi_state.enabled="${oc.decode:${oc.env:SENT_DOI_STATE_ENABLED}}"' \
             '++sent_doi_state.path=.state/sent-dois.fernet' \
             '++sent_doi_state.key=${oc.env:SENT_DOI_STATE_KEY}'
@@ -84,3 +96,11 @@ jobs:
           script: |
             const persistSentDoiState = require("./.github/scripts/persist-sent-doi-state.cjs");
             await persistSentDoiState({ github, context, core });
+
+      - name: Upload email preview
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-papers-preview
+          path: outputs/daily-papers.html
+          if-no-files-found: error

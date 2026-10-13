@@ -1,5 +1,7 @@
 from .base import get_retriever_cls as get_retriever_cls
 from . import (
+    conferences_retriever as conferences_retriever,
+    huggingface_retriever as huggingface_retriever,
     arxiv_retriever as arxiv_retriever,
     biorxiv_retriever as biorxiv_retriever,
     chemrxiv_retriever as chemrxiv_retriever,

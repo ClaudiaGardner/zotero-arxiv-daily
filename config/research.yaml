@@ -1,0 +1,99 @@
+# Personal research digest. Credentials are resolved from GitHub Secrets only.
+zotero:
+  user_id: null
+  api_key: null
+
+email:
+  sender: ${oc.env:SENDER}
+  receiver: ${oc.env:RECEIVER}
+  smtp_server: smtp.qq.com
+  smtp_port: 465
+  sender_password: ${oc.env:SENDER_PASSWORD,''}
+
+llm:
+  api:
+    key: ${oc.env:OPENAI_API_KEY}
+    base_url: ${oc.env:OPENAI_API_BASE}
+  api_mode: chat_completion
+  structured_output_format: json_object
+  thinking: null
+  language: 简体中文
+  generation_kwargs:
+    model: deepseek-flash
+    max_tokens: 1200
+    extra_body:
+      thinking:
+        type: disabled
+
+source:
+  arxiv:
+    category: [cs.AI, cs.HC, cs.LG, cs.CL, cs.CV, cs.MA, cs.RO]
+    include_cross_list: true
+    rss_metadata: true
+  huggingface:
+    lookback_days: 3
+  conferences:
+    mailto: ${oc.env:RECEIVER}
+    lookback_days: 7
+    venues:
+      - Human Factors in Computing Systems
+      - User Interface Software and Technology
+      - International Conference on Machine Learning
+      - Neural Information Processing Systems
+      - International Conference on Learning Representations
+      - AAAI Conference on Artificial Intelligence
+      - International Joint Conference on Artificial Intelligence
+      - Association for Computational Linguistics
+      - Empirical Methods in Natural Language Processing
+      - Computer Vision and Pattern Recognition
+      - International Conference on Computer Vision
+      - European Conference on Computer Vision
+      - ACM International Conference on Multimedia
+      - Autonomous Agents and Multiagent Systems
+      - Conference on Robot Learning
+
+reranker:
+  topk: 2
+  recency_half_life_days: null
+  mmr_lambda: null
+  local:
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encode_kwargs:
+      batch_size: 64
+      normalize_embeddings: true
+
+executor:
+  debug: false
+  source: [conferences, huggingface, arxiv]
+  reranker: local
+  send_empty: true
+  max_paper_num: 20
+  min_score: 3.5
+  pin_keywords: [game agent, gaming agent, video game agent, world model, human-agent interaction, human-ai interaction]
+  max_pinned_num: 5
+  enrich_workers: 3
+
+sent_doi_state:
+  enabled: ${oc.decode:${oc.env:SENT_DOI_STATE_ENABLED,'true'}}
+  path: .state/sent-dois.fernet
+  key: ${oc.env:SENT_DOI_STATE_KEY}
+
+research:
+  abstract_only: true
+  conference_bonus: 0.8
+  max_journal_papers: 2
+  interests:
+    - title: LLM agents and multi-agent systems
+      abstract: Language model agents, tool use, planning, reasoning, memory, multi-agent collaboration, autonomous agents, agent evaluation, computer use and web agents.
+    - title: Human-computer interaction and human-AI collaboration
+      abstract: Human-computer interaction, user interfaces, human-agent interaction, human-AI collaboration, mixed initiative, interactive AI, user studies, usability and human-centered AI.
+    - title: Game agents and interactive virtual environments
+      abstract: Video game agents, Minecraft, open-world gameplay, reinforcement learning, game AI, embodied agents, real-time decision making, game environments and interactive simulation.
+    - title: Large language models
+      abstract: Large language models, LLM reasoning, reinforcement learning with verifiable rewards, post-training, alignment, instruction tuning, efficient language models and evaluation benchmarks.
+    - title: Multimodal large language models
+      abstract: Multimodal large language models, MLLM, vision-language models, VLM, video understanding, visual reasoning, GUI agents, vision-language-action models and multimodal interaction.
+    - title: Generative models
+      abstract: Generative models, diffusion models, flow matching, autoregressive generation, image synthesis, video generation, controllable generation and interactive content creation.
+    - title: World models and model-based agents
+      abstract: World models, learned dynamics, action-conditioned video generation, neural simulators, predictive environment models, planning with world models and model-based reinforcement learning.

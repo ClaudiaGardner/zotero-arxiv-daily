@@ -84,6 +84,11 @@ class Executor:
             max_retries=0,
         )
     def fetch_zotero_corpus(self) -> list[CorpusPaper]:
+        topics = self.config.get("research", {}).get("interests", [])
+        if topics:
+            from .research_preferences import interest_corpus
+            logger.info("Using {} explicitly configured research interests", len(topics))
+            return interest_corpus(topics)
         logger.info("Fetching zotero corpus")
         zot = zotero.Zotero(self.config.zotero.user_id, 'user', self.config.zotero.api_key)
         collections = zot.everything(zot.collections())
@@ -150,6 +155,10 @@ class Executor:
             )
             return
         all_papers = retrieve_and_merge(self.retrievers)
+        preferences = self.config.get("research", {})
+        if preferences:
+            from .research_preferences import deduplicate_research_papers
+            all_papers = deduplicate_research_papers(all_papers)
         all_papers = filter_sent_paper_candidates(all_papers, sent_identities)
         self.pipeline_enrichers.enrich_before_rerank(all_papers)
         logger.info(f"Total {len(all_papers)} papers retrieved from all sources")
@@ -158,6 +167,10 @@ class Executor:
         if len(all_papers) > 0:
             logger.info("Reranking papers...")
             reranked_papers = self.reranker.rerank(all_papers, corpus)
+            if preferences:
+                from .research_preferences import prioritize_venues, limit_journals
+                reranked_papers = prioritize_venues(reranked_papers, preferences.get("conference_bonus", 0.8))
+                reranked_papers = limit_journals(reranked_papers, preferences.get("max_journal_papers", 2))
             # Keyword pinning sits ON TOP of the recommendation algorithm:
             # papers matching a configured keyword are force-pinned to the top of
             # the email and do NOT count against max_paper_num, so they never
@@ -177,6 +190,13 @@ class Executor:
         self._enrich_papers(email_papers)
         logger.info("Sending email...")
         email_content = render_email(email_papers)
+        if self.config.executor.get("preview", False):
+            from pathlib import Path
+            target = Path("outputs/daily-papers.html")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(email_content, encoding="utf-8")
+            logger.info("Preview saved: {} ({} papers)", target, len(email_papers))
+            return
         send_email(self.config, email_content)
         emailed_identities = paper_identities(email_papers)
         if emailed_identities:
@@ -302,7 +322,7 @@ class Executor:
         )
         _ = enrich_final_papers(
             papers,
-            self.retrievers,
+            {} if self.config.get("research", {}).get("abstract_only", False) else self.retrievers,
             self.openai_client,
             self.config.llm,
             workers,

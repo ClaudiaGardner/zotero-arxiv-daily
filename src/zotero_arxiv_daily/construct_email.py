@@ -1,5 +1,6 @@
 from .protocol import Paper
 import math
+from html import escape
 
 
 framework = """
@@ -131,7 +132,16 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
             affiliations += ', ...'
     else:
         affiliations = 'Unknown Affiliation'
-    return get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned)
+    metadata = escape(p.journal or ("预印本，会议录用状态未确认" if p.is_preprint else ""))
+    source = escape(p.source)
+    paper_link = '<div style="margin:6px 0;color:#666;font-size:13px;">来源：' + source
+    if metadata:
+        paper_link += ' · ' + metadata
+    paper_link += ' · <a href="' + escape(p.url, quote=True) + '">论文页面</a></div>'
+    if p.source == "huggingface":
+        paper_id = p.url.rsplit("/", 1)[-1]
+        paper_link += '<a href="https://huggingface.co/papers/' + escape(paper_id, quote=True) + '">Hugging Face 讨论</a>'
+    return paper_link + get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned)
 
 
 def render_email(papers:list[Paper]) -> str:

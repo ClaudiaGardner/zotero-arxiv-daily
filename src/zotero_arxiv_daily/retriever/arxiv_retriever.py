@@ -124,6 +124,26 @@ class ArxivRetriever(BaseRetriever):
             raise Exception(f"Invalid ARXIV_QUERY: {query}.")
         raw_papers = []
         allowed_announce_types = {"new", "cross"} if include_cross_list else {"new"}
+        if self.retriever_config.get("rss_metadata", False):
+            from types import SimpleNamespace
+            raw = []
+            seen = set()
+            for entry in feed.entries:
+                if entry.get("arxiv_announce_type", "new") not in allowed_announce_types:
+                    continue
+                paper_id = entry.id.removeprefix("oai:arXiv.org:")
+                if paper_id in seen:
+                    continue
+                seen.add(paper_id)
+                abstract = entry.get("summary", "").split("Abstract:", 1)[-1].strip()
+                raw.append(SimpleNamespace(
+                    title=entry.title, summary=abstract,
+                    authors=[SimpleNamespace(name=name.strip()) for name in entry.get("author", "").split(",") if name.strip()],
+                    entry_id=f"https://arxiv.org/abs/{paper_id}",
+                    pdf_url=f"https://arxiv.org/pdf/{paper_id}",
+                    journal_ref=None, comment=None,
+                ))
+            return raw[:10] if self.config.executor.debug else raw
         all_paper_ids = [
             i.id.removeprefix("oai:arXiv.org:")
             for i in feed.entries
@@ -178,6 +198,7 @@ class ArxivRetriever(BaseRetriever):
             pdf_url=pdf_url,
             full_text=None,
             is_preprint=True,
+            journal=getattr(raw_paper, "journal_ref", None),
         )
 
     def fetch_full_text(self, paper: Paper) -> str | None:
