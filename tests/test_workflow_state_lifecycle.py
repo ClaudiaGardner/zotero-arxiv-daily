@@ -210,13 +210,18 @@ def test_state_lifecycle_has_no_unsafe_fallback_or_logging(workflow_name: str) -
     for forbidden in (
         "continue-on-error",
         "actions/cache",
-        "actions/upload-artifact",
         "api.github.com",
         "set -x",
         "tee ",
         "|| true",
     ):
         assert forbidden not in source
+    # Email previews are allowed; delivery state and credentials must not be
+    # included in an artifact or made available to the upload step.
+    for step in workflow_steps(workflow_name):
+        if str(step.get("uses", "")).startswith("actions/upload-artifact@"):
+            assert step["with"]["path"] == "outputs/daily-papers.html"
+            assert not step.get("env")
     assert named_step(workflow_name, "Checkout")["uses"] == "actions/checkout@v6"
     assert named_step(workflow_name, "Checkout").get("with") == {
         "persist-credentials": "false"
