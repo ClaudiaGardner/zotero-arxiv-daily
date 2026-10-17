@@ -67,6 +67,30 @@ def test_proceedings_conversion_retains_venue_evidence():
     assert result.is_preprint is False
 
 
+def test_conference_search_uses_relevance_and_rejects_workshops_and_reissued_old_work(monkeypatch):
+    from datetime import datetime, timezone
+    from zotero_arxiv_daily.retriever import conferences_retriever as module
+    now = datetime.now(timezone.utc).date()
+    current = {"date-parts": [[now.year, now.month, now.day]]}
+    chapter = {"type": "book-chapter", "container-title": ["Computer Vision - ECCV"], "issued": current}
+    old = {"type": "proceedings-article", "container-title": ["CHI"], "issued": {"date-parts": [[2013, 6, 3]]}, "published-online": current}
+    workshop = {"type": "proceedings-article", "container-title": ["CHI Companion"], "issued": current}
+    unrelated = {"type": "proceedings-article", "container-title": ["Smart Grids"], "issued": current}
+    calls = []
+    class Response:
+        def raise_for_status(self): pass
+        def json(self): return {"message": {"items": [unrelated, old, workshop, chapter]}}
+    def get(url, *, params, timeout):
+        calls.append(params)
+        return Response()
+    monkeypatch.setattr(module.requests, "get", get)
+    config = OmegaConf.create({"source": {"conferences": {"venues": ["European Conference on Computer Vision"], "mailto": "reader@example.com"}}})
+    assert ConferencesRetriever(config)._retrieve_raw_papers() == [chapter]
+    assert calls[0]["sort"] == "score"
+    assert "from-index-date" not in calls[0]["filter"]
+    assert "type:" not in calls[0]["filter"]
+
+
 def test_qq_465_uses_ssl_directly(config, monkeypatch):
     from zotero_arxiv_daily.utils import send_email
     import smtplib

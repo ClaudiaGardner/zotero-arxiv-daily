@@ -12,6 +12,7 @@ def test_dates_preserve_source_precision_and_reject_invalid_days():
     assert publication_date("2026-02-30") is None
     assert publication_date(datetime(2026, 10, 16, tzinfo=timezone.utc)) == "2026-10-16"
     assert crossref_publication_date({"indexed": {"date-time": "2026-10-17"}, "published": {"date-parts": [[2026, 7]]}}) == "2026-07"
+    assert crossref_publication_date({"issued": {"date-parts": [[2013, 6, 3]]}, "published-online": {"date-parts": [[2026, 10, 17]]}}) == "2013-06-03"
 
 
 def test_hf_uses_paper_first_publication_not_daily_recommendation_date():

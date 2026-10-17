@@ -197,6 +197,13 @@ class Executor:
             logger.info("No new papers found. No email will be sent.")
             return
         self._enrich_papers(email_papers)
+        if preferences.get("selection", {}).get("enabled", False) and self.config.llm.get("digest_format") == "concise_academic":
+            complete = [paper for paper in email_papers if all(heading in (paper.tldr or "") for heading in ("【Motivation】", "【方法】", "【创新点】"))]
+            if email_papers and not complete:
+                raise RuntimeError("No complete academic digests; refusing to send fallback abstracts")
+            if len(complete) != len(email_papers):
+                logger.warning("Omitting {} incomplete digests after retry", len(email_papers) - len(complete))
+            email_papers = complete
         logger.info("Sending email...")
         email_content = render_email(email_papers)
         from pathlib import Path

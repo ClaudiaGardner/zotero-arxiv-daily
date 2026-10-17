@@ -21,6 +21,7 @@ llm:
   analysis_depth: detailed
   digest_format: concise_academic
   include_publication_dates: true
+  retry_failed_digest: true
   max_input_tokens: 16000
   generation_kwargs:
     model: deepseek-v4-pro

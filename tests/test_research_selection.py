@@ -51,3 +51,17 @@ def test_keyword_overflow_never_overtakes_higher_ranked_nonmatches():
     pinned, remaining = executor._select_pinned(papers)
     assert pinned == papers[:1]
     assert remaining == papers[1:]
+
+
+def test_academic_digest_retries_an_incomplete_response_once(monkeypatch):
+    from zotero_arxiv_daily.final_enrichment import enrich_final_papers
+    p = paper("Agent")
+    calls = []
+    def generate(client, params):
+        calls.append(True)
+        p.tldr = "fallback abstract" if len(calls) == 1 else "【Motivation】动机【方法】方法【创新点】创新"
+        return p.tldr, []
+    monkeypatch.setattr(p, "generate_tldr_and_affiliations", generate)
+    result = enrich_final_papers([p], {}, None, {"digest_format": "concise_academic", "retry_failed_digest": True}, 1)
+    assert len(calls) == 2
+    assert "【方法】" in result[0].tldr

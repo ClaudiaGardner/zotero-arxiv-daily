@@ -2,6 +2,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+import re
 
 import requests
 from loguru import logger
@@ -17,20 +18,24 @@ from ..publication_dates import crossref_publication_date
 class ConferencesRetriever(BaseRetriever):
     def _retrieve_raw_papers(self):
         published_since = (datetime.now(timezone.utc) - timedelta(days=self.retriever_config.get("publication_lookback_days", 90))).date().isoformat()
+        today = datetime.now(timezone.utc).date().isoformat()
 
         def retrieve(venue):
             try:
                 response = requests.get("https://api.crossref.org/works", params={
-                    "filter": f"type:proceedings-article,from-pub-date:{published_since}",
+                    "filter": f"from-pub-date:{published_since},until-pub-date:{today}",
                     "query.container-title": venue,
-                    "sort": "published", "order": "desc", "rows": 100,
+                    "sort": "score", "order": "desc", "rows": 100,
                     "mailto": self.retriever_config.mailto,
                 }, timeout=(10, 40))
                 response.raise_for_status()
                 # Search is fuzzy: require independently matching venue metadata.
                 items = response.json()["message"]["items"]
                 matched = [item for item in items
-                           if CONFERENCE_PATTERN.search(" ".join(item.get("container-title", [])))]
+                           if item.get("type") in {"proceedings-article", "book-chapter"}
+                           and CONFERENCE_PATTERN.search(" ".join(item.get("container-title", [])))
+                           and not re.search(r"workshop|companion|extended abstracts|adjunct", " ".join(item.get("container-title", [])), re.I)
+                           and (not crossref_publication_date(item) or published_since <= crossref_publication_date(item) <= today)]
                 logger.info("Conference query={} returned={} matched={} sample_venues={}", venue, len(items), len(matched),
                             [item.get("container-title", []) for item in items[:2]])
                 return matched

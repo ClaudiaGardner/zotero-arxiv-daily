@@ -29,13 +29,16 @@ def publication_date(value) -> str | None:
 
 
 def crossref_publication_date(raw) -> str | None:
-    for key in ("published-online", "published-print", "published", "issued"):
+    dates = []
+    for key in ("issued", "published", "published-online", "published-print"):
         parts = raw.get(key, {}).get("date-parts", [])
         if parts and 1 <= len(parts[0]) <= 3:
             value = "-".join(f"{int(part):0{4 if i == 0 else 2}d}" for i, part in enumerate(parts[0]))
             if result := publication_date(value):
-                return result
-    return None
+                if key == "issued":
+                    return result  # Crossref's earliest known publication date.
+                dates.append(result)
+    return min(dates) if dates else None
 
 
 class _CitationMetadata(HTMLParser):

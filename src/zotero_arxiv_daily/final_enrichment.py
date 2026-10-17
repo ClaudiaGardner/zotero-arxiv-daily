@@ -56,6 +56,11 @@ def enrich_final_papers(
                         type(error).__name__,
                     )
         _ = paper.generate_tldr_and_affiliations(client, llm_params)
+        if (llm_params.get("retry_failed_digest", False)
+                and llm_params.get("digest_format") == "concise_academic"
+                and not all(heading in (paper.tldr or "") for heading in ("【Motivation】", "【方法】", "【创新点】"))):
+            logger.info("Retrying incomplete academic digest: {}", paper.title)
+            _ = paper.generate_tldr_and_affiliations(client, llm_params)
         return paper
 
     with ThreadPoolExecutor(max_workers=worker_count) as executor:
