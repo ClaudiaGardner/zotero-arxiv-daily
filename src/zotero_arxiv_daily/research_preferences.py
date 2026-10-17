@@ -63,6 +63,10 @@ def deduplicate_research_papers(papers: list[Paper]) -> list[Paper]:
         if winner is not None:
             winner.abstract = winner.abstract or paper.abstract
             winner.pdf_url = winner.pdf_url or paper.pdf_url
+            if not winner.published_date and paper.published_date:
+                winner.published_date = paper.published_date
+                winner.publication_date_basis = paper.publication_date_basis
+            winner.updated_date = winner.updated_date or paper.updated_date
             if is_conference(paper) and not is_conference(winner):
                 winner.journal = paper.journal
             continue

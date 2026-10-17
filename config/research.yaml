@@ -20,6 +20,7 @@ llm:
   language: 简体中文
   analysis_depth: detailed
   digest_format: concise_academic
+  include_publication_dates: true
   max_input_tokens: 16000
   generation_kwargs:
     model: deepseek-v4-pro
@@ -40,7 +41,7 @@ source:
     lookback_days: 3
   conferences:
     mailto: ${oc.env:RECEIVER}
-    lookback_days: 7
+    publication_lookback_days: 90
     venues:
       - Human Factors in Computing Systems
       - User Interface Software and Technology
@@ -75,8 +76,8 @@ executor:
   send_empty: true
   max_paper_num: 20
   min_score: 3.5
-  pin_keywords: [game agent, gaming agent, video game agent, world model, human-agent interaction, human-ai interaction]
-  max_pinned_num: 5
+  pin_keywords: []
+  max_pinned_num: 0
   enrich_workers: 3
 
 sent_doi_state:
@@ -89,6 +90,10 @@ research:
   abstract_only: false
   conference_bonus: 0.8
   max_journal_papers: 2
+  selection:
+    enabled: true
+    max_candidates: 100
+    max_per_topic: 8
   interests:
     - title: LLM agents and multi-agent systems
       abstract: Language model agents, tool use, planning, reasoning, memory, multi-agent collaboration, autonomous agents, agent evaluation, computer use and web agents.

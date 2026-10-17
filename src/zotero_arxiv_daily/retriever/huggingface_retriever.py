@@ -7,6 +7,7 @@ from loguru import logger
 
 from .base import BaseRetriever, register_retriever
 from ..protocol import Paper
+from ..publication_dates import publication_date
 
 
 @register_retriever("huggingface")
@@ -35,4 +36,7 @@ class HuggingFaceRetriever(BaseRetriever):
                      abstract=paper.get("summary") or "",
                      authors=[a.get("name", "") for a in paper.get("authors", [])],
                      url=f"https://arxiv.org/abs/{paper_id}",
-                     pdf_url=f"https://arxiv.org/pdf/{paper_id}", is_preprint=True)
+                     pdf_url=f"https://arxiv.org/pdf/{paper_id}", is_preprint=True,
+                     published_date=publication_date(paper.get("publishedAt")),
+                     updated_date=publication_date(paper.get("updatedAt")),
+                     publication_date_basis="arXiv 首次发布")

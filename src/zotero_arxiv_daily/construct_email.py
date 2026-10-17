@@ -173,6 +173,12 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
     paper_link = '<div style="margin:6px 0;color:#666;font-size:13px;">来源：' + source
     if metadata:
         paper_link += ' · ' + metadata
+    date_label = p.publication_date_basis or "论文发表"
+    paper_link += ' · 发布时间（' + escape(date_label) + '）：' + escape(p.published_date or "未取得，见论文页面")
+    if p.updated_date and p.updated_date != p.published_date:
+        paper_link += ' · 最近更新：' + escape(p.updated_date)
+    if p.selection_reason:
+        paper_link += ' · 入选依据：' + escape(p.selection_reason)
     if p.reading_basis is not None and not (p.tldr or "").startswith("【阅读依据】"):
         paper_link += ' · 阅读依据：' + escape(p.reading_basis)
     paper_link += ' · <a href="' + escape(p.url, quote=True) + '">论文页面</a></div>'
@@ -187,7 +193,8 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
                        '<div style="font-size:12px;line-height:1.6;color:#666;margin-top:8px;">原文图注：' + escape(figure.caption) + '</div></div>')
     elif p.reading_basis is not None:
         figure_html = '<div style="font-size:12px;color:#666;">未取得可用主图，可通过文末 PDF 链接查看原文。</div>'
-    return paper_link + get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned, figure_html=figure_html)
+    block = get_block_html(p.title, authors, rate, p.tldr, p.pdf_url or p.url, affiliations, pinned=pinned, figure_html=figure_html)
+    return paper_link + block.replace("<strong>Relevance:</strong>", "<strong>主题相似度（非质量分）:</strong>")
 
 
 def render_email(papers:list[Paper]) -> str:

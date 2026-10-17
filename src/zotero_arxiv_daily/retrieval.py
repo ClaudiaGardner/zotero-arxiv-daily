@@ -45,6 +45,7 @@ def retrieve_and_merge(
                 )
                 source_papers = []
             ordered_papers.extend(source_papers)
+            logger.info("Retrieved source={} count={}", source_name, len(source_papers))
 
     return _deduplicate_by_doi(ordered_papers)
 

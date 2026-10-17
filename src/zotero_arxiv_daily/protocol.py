@@ -66,6 +66,12 @@ class Paper:
     journal: str | None = None
     reading_basis: str | None = None
     main_figure: PaperFigure | None = None
+    published_date: str | None = None
+    updated_date: str | None = None
+    publication_date_basis: str | None = None
+    selection_reason: str | None = None
+    research_topic: str | None = None
+    selection_score: float | None = None
 
     def generate_tldr_and_affiliations(
         self,

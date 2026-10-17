@@ -129,9 +129,9 @@ def test_retrieval_isolates_source_failure_and_redacts_exception_details() -> No
 
     # Then: the failed source contributes nothing and only safe fields are logged.
     assert result == [safe_paper]
-    assert log_output.getvalue().strip() == (
-        "source=broken type=SensitiveSourceError"
-    )
+    assert "source=broken type=SensitiveSourceError" in log_output.getvalue()
+    assert "Retrieved source=healthy count=1" in log_output.getvalue()
+    assert not any(value in log_output.getvalue() for value in ("private.example", "secret", "hunter2", "LEAK"))
 
 
 def test_same_source_doi_duplicates_keep_first_paper_identity_and_position() -> None:

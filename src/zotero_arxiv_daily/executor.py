@@ -177,7 +177,12 @@ class Executor:
             # the email and do NOT count against max_paper_num, so they never
             # displace the algorithm's picks. It scans the full retrieved set so
             # that low-scored-but-keyword-matched papers are still surfaced.
-            pinned_papers, reranked_papers = self._select_pinned(reranked_papers)
+            if preferences.get("selection", {}).get("enabled", False):
+                from .research_selection import select_research_papers
+                reranked_papers = self._apply_min_score(reranked_papers)
+                reranked_papers = select_research_papers(reranked_papers, self.openai_client, self.config)
+            else:
+                pinned_papers, reranked_papers = self._select_pinned(reranked_papers)
             reranked_papers = self._apply_min_score(reranked_papers)
             limit = self.config.executor.max_paper_num
             if preferences.get("digest_size") is not None:
@@ -300,9 +305,10 @@ class Executor:
             for paper in overflow:
                 paper.pinned = False
             pinned = pinned[:cap]
-            # papers is score-sorted, so overflow entries are the lower-scored
-            # matches; prepending keeps remaining score-sorted for the top-N slice.
-            remaining = overflow + remaining
+            # Rebuild from the original order: keyword overflow must not jump
+            # ahead of higher-ranked papers that did not match the keyword.
+            selected_ids = {id(paper) for paper in pinned}
+            remaining = [paper for paper in papers if id(paper) not in selected_ids]
             logger.warning(
                 f"{cap + len(overflow)} papers matched pin keywords; capping the "
                 f"pinned section to {cap} (max_pinned_num). The remaining "

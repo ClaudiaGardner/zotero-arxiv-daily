@@ -10,20 +10,20 @@ from .base import BaseRetriever, register_retriever
 from .crossref_metadata import clean_crossref_text
 from ..protocol import Paper
 from ..research_preferences import CONFERENCE_PATTERN
+from ..publication_dates import crossref_publication_date
 
 
 @register_retriever("conferences")
 class ConferencesRetriever(BaseRetriever):
     def _retrieve_raw_papers(self):
-        since = (datetime.now(timezone.utc) - timedelta(days=self.retriever_config.lookback_days)).date().isoformat()
-        published_since = (datetime.now(timezone.utc) - timedelta(days=30)).date().isoformat()
+        published_since = (datetime.now(timezone.utc) - timedelta(days=self.retriever_config.get("publication_lookback_days", 90))).date().isoformat()
 
         def retrieve(venue):
             try:
                 response = requests.get("https://api.crossref.org/works", params={
-                    "filter": f"type:proceedings-article,from-index-date:{since},from-pub-date:{published_since}",
+                    "filter": f"type:proceedings-article,from-pub-date:{published_since}",
                     "query.container-title": venue,
-                    "sort": "indexed", "order": "desc", "rows": 100,
+                    "sort": "published", "order": "desc", "rows": 100,
                     "mailto": self.retriever_config.mailto,
                 }, timeout=(10, 40))
                 response.raise_for_status()
@@ -48,4 +48,6 @@ class ConferencesRetriever(BaseRetriever):
                      authors=[" ".join(filter(None, [a.get("given"), a.get("family")]))
                               for a in raw.get("author", [])],
                      url=f"https://doi.org/{raw['DOI']}", pdf_url=pdf, doi=raw["DOI"],
-                     journal="; ".join(raw.get("container-title", [])), is_preprint=False)
+                     journal="; ".join(raw.get("container-title", [])), is_preprint=False,
+                     published_date=crossref_publication_date(raw),
+                     publication_date_basis="会议论文发表")

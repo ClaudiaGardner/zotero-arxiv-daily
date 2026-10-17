@@ -208,6 +208,7 @@ class ArxivRetriever(BaseRetriever):
                         entry_id=entry.id.replace("http://", "https://"),
                         pdf_url=entry.id.replace("http://", "https://").replace("/abs/", "/pdf/"),
                         journal_ref=entry.get("arxiv_journal_ref"), comment=entry.get("arxiv_comment"),
+                        published=entry.get("published"), updated=entry.get("updated"),
                     ))
             except requests.RequestException as error:
                 logger.warning("arXiv API fallback unavailable for {} ({})", category, type(error).__name__)
@@ -216,6 +217,7 @@ class ArxivRetriever(BaseRetriever):
         return raw
 
     def convert_to_paper(self, raw_paper: ArxivResult) -> Paper:
+        from ..publication_dates import publication_date
         title = raw_paper.title
         authors = [a.name for a in raw_paper.authors]
         abstract = raw_paper.summary
@@ -237,6 +239,9 @@ class ArxivRetriever(BaseRetriever):
             full_text=None,
             is_preprint=True,
             journal=getattr(raw_paper, "journal_ref", None),
+            published_date=publication_date(getattr(raw_paper, "published", None)),
+            updated_date=publication_date(getattr(raw_paper, "updated", None)),
+            publication_date_basis="arXiv 首次发布",
         )
 
     def fetch_full_text(self, paper: Paper) -> str | None:

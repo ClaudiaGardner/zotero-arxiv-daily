@@ -41,6 +41,9 @@ def enrich_final_papers(
                     sum(p.main_figure is not None for p in papers), len(papers))
 
     def enrich_one(paper: Paper) -> Paper:
+        from .publication_dates import enrich_publication_date
+        if llm_params.get("include_publication_dates", False):
+            enrich_publication_date(paper)
         if not detailed and (paper.full_text is None or not paper.full_text.strip()):
             retriever = retrievers.get(paper.source)
             if retriever is not None:
