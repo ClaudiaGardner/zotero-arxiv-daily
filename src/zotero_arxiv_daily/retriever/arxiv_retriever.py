@@ -218,6 +218,7 @@ class ArxivRetriever(BaseRetriever):
 
     def convert_to_paper(self, raw_paper: ArxivResult) -> Paper:
         from ..publication_dates import publication_date
+        from ..research_preferences import author_conference_note
         title = raw_paper.title
         authors = [a.name for a in raw_paper.authors]
         abstract = raw_paper.summary
@@ -242,6 +243,7 @@ class ArxivRetriever(BaseRetriever):
             published_date=publication_date(getattr(raw_paper, "published", None)),
             updated_date=publication_date(getattr(raw_paper, "updated", None)),
             publication_date_basis="arXiv 首次发布",
+            author_venue_note=author_conference_note(getattr(raw_paper, "comment", None)),
         )
 
     def fetch_full_text(self, paper: Paper) -> str | None:

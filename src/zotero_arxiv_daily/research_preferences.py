@@ -27,8 +27,19 @@ def interest_corpus(topics) -> list[CorpusPaper]:
     ]
 
 
+def author_conference_note(comment: str | None) -> str | None:
+    """Retain explicit author-declared acceptance, distinct from venue records."""
+    if not comment or not CONFERENCE_PATTERN.search(comment):
+        return None
+    if re.search(r"\b(?:submitted|submission|under review|rejected|workshop|companion)\b|not\s+accepted", comment, re.I):
+        return None
+    if not re.search(r"\b(?:accepted|to appear|published in)\b", comment, re.I):
+        return None
+    return comment.strip()[:500]
+
+
 def is_conference(paper: Paper) -> bool:
-    return paper.source == "conferences" or bool(CONFERENCE_PATTERN.search(paper.journal or ""))
+    return paper.source == "conferences" or bool(CONFERENCE_PATTERN.search(paper.journal or "")) or bool(paper.author_venue_note)
 
 
 def prioritize_venues(papers: list[Paper], bonus: float) -> list[Paper]:
@@ -67,6 +78,7 @@ def deduplicate_research_papers(papers: list[Paper]) -> list[Paper]:
                 winner.published_date = paper.published_date
                 winner.publication_date_basis = paper.publication_date_basis
             winner.updated_date = winner.updated_date or paper.updated_date
+            winner.author_venue_note = winner.author_venue_note or paper.author_venue_note
             if is_conference(paper) and not is_conference(winner):
                 winner.journal = paper.journal
             continue

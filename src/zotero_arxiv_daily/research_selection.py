@@ -49,6 +49,7 @@ def select_research_papers(papers: list[Paper], client, config) -> list[Paper]:
     def assess(batch):
         candidates = [{"id": i, "title": p.title, "abstract": p.abstract[:4500],
                        "source": p.source, "venue_metadata": p.journal,
+                       "author_venue_declaration": p.author_venue_note,
                        "publication_date": p.published_date}
                       for i, p in enumerate(batch)]
         prompt = """Select papers for a researcher's daily digest. Assess research value, not keyword overlap.
@@ -57,6 +58,7 @@ The interests have equal status: agents, HCI, game agents, LLM, MLLM, generative
 Favor a specific reusable mechanism, substantive empirical finding, well-designed HCI study or rigorous benchmark.
 Prefer documented major-conference main-track papers when comparably relevant. A preprint can be excellent;
 arXiv/Hugging Face presence, institution names and fashionable terminology do not prove quality or acceptance.
+An author_venue_declaration is an author's explicit claim, not independently verified conference metadata.
 Downrank generic surveys, minor application combinations and unsupported superiority claims. Do not invent gaps.
 Robotics, driving or medical work should qualify only if its mechanism is directly useful to these interests;
 sharing the term 'world model' or 'agent' alone is insufficient. Evaluate the abstract's concrete methodological

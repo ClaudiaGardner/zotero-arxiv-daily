@@ -173,6 +173,8 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
     paper_link = '<div style="margin:6px 0;color:#666;font-size:13px;">来源：' + source
     if metadata:
         paper_link += ' · ' + metadata
+    if p.author_venue_note:
+        paper_link += ' · 会议信息（作者声明）：' + escape(p.author_venue_note)
     date_label = p.publication_date_basis or "论文发表"
     paper_link += ' · 发布时间（' + escape(date_label) + '）：' + escape(p.published_date or "未取得，见论文页面")
     if p.updated_date and p.updated_date != p.published_date:

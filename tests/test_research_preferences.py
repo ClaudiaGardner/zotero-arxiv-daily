@@ -3,6 +3,7 @@ from omegaconf import OmegaConf
 from zotero_arxiv_daily.protocol import Paper
 from zotero_arxiv_daily.research_preferences import (
     interest_corpus, deduplicate_research_papers, prioritize_venues, limit_journals,
+    author_conference_note,
 )
 from zotero_arxiv_daily.retriever.huggingface_retriever import HuggingFaceRetriever
 from zotero_arxiv_daily.retriever.conferences_retriever import ConferencesRetriever
@@ -40,6 +41,14 @@ def test_interest_corpus_does_not_require_zotero():
     corpus = interest_corpus(topics)
     assert corpus[0].title == "Game agents"
     assert corpus[0].abstract == "World models"
+
+
+def test_author_acceptance_claims_kept_but_submissions_and_workshops_not_promoted():
+    assert author_conference_note("Accepted at NeurIPS 2026") == "Accepted at NeurIPS 2026"
+    assert author_conference_note("Submitted to NeurIPS 2026") is None
+    assert author_conference_note("Accepted at NeurIPS workshop") is None
+    assert author_conference_note("Not accepted at ICLR") is None
+    assert author_conference_note("We compare against papers from NeurIPS") is None
 
 
 def test_hf_conversion_uses_arxiv_identity():

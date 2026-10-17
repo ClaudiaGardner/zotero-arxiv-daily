@@ -72,6 +72,7 @@ class Paper:
     selection_reason: str | None = None
     research_topic: str | None = None
     selection_score: float | None = None
+    author_venue_note: str | None = None
 
     def generate_tldr_and_affiliations(
         self,
