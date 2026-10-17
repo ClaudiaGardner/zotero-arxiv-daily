@@ -59,7 +59,7 @@ def fetch_reading_text(paper: Paper) -> str | None:
 
 
 def full_text_excerpt(text, encoding, budget):
-    tokens = encoding.encode(text)
+    tokens = encoding.encode(text, disallowed_special=())
     if len(tokens) <= budget:
         return text
     # Keep methods/results/limitations instead of spending the context on the intro.
@@ -79,5 +79,5 @@ def full_text_excerpt(text, encoding, budget):
     for heading in selected:
         next_heading = next((h.start() for h in headings if h.start() > heading.start()), len(text))
         section = text[heading.start():next_heading]
-        pieces.append(encoding.decode(encoding.encode(section)[:section_budget]))
+        pieces.append(encoding.decode(encoding.encode(section, disallowed_special=())[:section_budget]))
     return "\n\n[正文节选]\n\n".join(pieces)

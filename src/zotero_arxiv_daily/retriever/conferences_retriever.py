@@ -28,8 +28,12 @@ class ConferencesRetriever(BaseRetriever):
                 }, timeout=(10, 40))
                 response.raise_for_status()
                 # Search is fuzzy: require independently matching venue metadata.
-                return [item for item in response.json()["message"]["items"]
-                        if CONFERENCE_PATTERN.search(" ".join(item.get("container-title", [])))]
+                items = response.json()["message"]["items"]
+                matched = [item for item in items
+                           if CONFERENCE_PATTERN.search(" ".join(item.get("container-title", [])))]
+                logger.info("Conference query={} returned={} matched={} sample_venues={}", venue, len(items), len(matched),
+                            [item.get("container-title", []) for item in items[:2]])
+                return matched
             except (requests.RequestException, ValueError, KeyError):
                 logger.warning("Conference metadata unavailable for {}", venue)
                 return []

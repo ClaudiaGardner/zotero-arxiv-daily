@@ -7,6 +7,17 @@ from tests import make_recording_client
 from tests.canned_responses import make_sample_paper
 from zotero_arxiv_daily.paper_generation import _build_messages
 from zotero_arxiv_daily.deep_reading import fetch_reading_text, full_text_excerpt
+
+
+def test_literal_tokenizer_markers_in_lm_papers_remain_text():
+    from zotero_arxiv_daily.paper_generation import _build_messages
+    from zotero_arxiv_daily.protocol import Paper
+    text = "The method predicts the <|endoftext|> token. " * 300
+    paper = Paper(source="arxiv", title="Language modeling", authors=[], abstract="Tokenizer study", url="https://arxiv.org/abs/1", full_text=text)
+    messages = _build_messages(paper, {"analysis_depth": "detailed", "digest_format": "concise_academic", "max_input_tokens": 4000})
+    encoding = tiktoken.encoding_for_model("gpt-4o")
+    assert "<|endoftext|>" in messages[1]["content"]
+    assert len(encoding.encode(messages[1]["content"], disallowed_special=())) <= 4000
 from zotero_arxiv_daily.construct_email import format_digest
 
 

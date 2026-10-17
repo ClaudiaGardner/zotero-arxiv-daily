@@ -85,13 +85,13 @@ Return author institutions only when evidenced, otherwise an empty list. Do not 
         text = paper.full_text.strip()
         if detailed:
             from .deep_reading import full_text_excerpt
-            reserved = len(encoding.encode("\n\n".join(prompt_sections))) + 150
+            reserved = len(encoding.encode("\n\n".join(prompt_sections), disallowed_special=())) + 150
             text = full_text_excerpt(text, encoding, max(500, max_tokens - reserved))
         prompt_sections.append(f"Beginning/full text:\n{text}")
 
     complete_prompt = "\n\n".join(prompt_sections)
     user_prompt = encoding.decode(
-        encoding.encode(complete_prompt)[:max_tokens]
+        encoding.encode(complete_prompt, disallowed_special=())[:max_tokens]
     )
     return [
         {
