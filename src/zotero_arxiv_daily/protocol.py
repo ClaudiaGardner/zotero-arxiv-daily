@@ -73,6 +73,9 @@ class Paper:
     research_topic: str | None = None
     selection_score: float | None = None
     author_venue_note: str | None = None
+    affiliation_text: str | None = None
+    authority_summary: str | None = None
+    authority_signals: list[str] | None = None
 
     def generate_tldr_and_affiliations(
         self,

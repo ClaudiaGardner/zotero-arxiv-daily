@@ -95,6 +95,14 @@ research:
     enabled: true
     max_candidates: 100
     max_per_topic: 8
+  authority:
+    # Drop papers with no recognized venue, scholar or lab evidence.
+    enabled: true
+    # Extra approved candidates used to backfill papers dropped by the gate.
+    reserve: 15
+    extra_scholars: []
+    extra_labs: []
+    extra_venues: []
   interests:
     - title: LLM agents and multi-agent systems
       abstract: Language model agents, tool use, planning, reasoning, memory, multi-agent collaboration, autonomous agents, agent evaluation, computer use and web agents.

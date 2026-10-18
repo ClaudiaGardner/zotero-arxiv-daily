@@ -58,6 +58,35 @@ def fetch_reading_text(paper: Paper) -> str | None:
     return None
 
 
+def fetch_first_page_text(paper: Paper) -> str | None:
+    """Read page one only, for author-affiliation evidence.
+
+    This is a bounded download used by the academic-authority gate before any
+    digest call is spent. Full-text reading later reuses or re-fetches the
+    paper; the duplication is cheaper than generating a digest for a paper that
+    will be dropped.
+    """
+    if not paper.pdf_url:
+        return None
+    try:
+        import pymupdf
+
+        with requests.get(paper.pdf_url, timeout=(8, 40), stream=True) as response:
+            response.raise_for_status()
+            content = bytearray()
+            for chunk in response.iter_content(65536):
+                content.extend(chunk)
+                if len(content) > 8 * 1024 * 1024:
+                    break
+        with pymupdf.open(stream=bytes(content), filetype="pdf") as document:
+            if len(document) == 0:
+                return None
+            return document[0].get_text(sort=True)
+    except (requests.RequestException, ValueError, RuntimeError):
+        logger.info("First-page affiliation text unavailable: {}", paper.title)
+        return None
+
+
 def full_text_excerpt(text, encoding, budget):
     tokens = encoding.encode(text, disallowed_special=())
     if len(tokens) <= budget:

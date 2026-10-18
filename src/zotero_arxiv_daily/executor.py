@@ -179,8 +179,16 @@ class Executor:
             # that low-scored-but-keyword-matched papers are still surfaced.
             if preferences.get("selection", {}).get("enabled", False):
                 from .research_selection import select_research_papers
+                from .research_authority import build_authority_settings
+                authority = build_authority_settings(preferences)
                 reranked_papers = self._apply_min_score(reranked_papers)
-                reranked_papers = select_research_papers(reranked_papers, self.openai_client, self.config)
+                target = int(preferences.get("digest_size") or self.config.executor.max_paper_num)
+                pool_size = target + authority.reserve if authority.enabled else target
+                reranked_papers = select_research_papers(
+                    reranked_papers, self.openai_client, self.config, limit=pool_size
+                )
+                if authority.enabled:
+                    reranked_papers = self._apply_authority_gate(reranked_papers, target, authority)
             else:
                 pinned_papers, reranked_papers = self._select_pinned(reranked_papers)
             reranked_papers = self._apply_min_score(reranked_papers)
@@ -325,6 +333,37 @@ class Executor:
         if pinned:
             logger.info(f"Pinned {len(pinned)} paper(s) by keyword match")
         return pinned, remaining
+
+    def _apply_authority_gate(self, papers: list[Paper], target: int, settings) -> list[Paper]:
+        """Keep only papers with venue, scholar or lab evidence.
+
+        The shortlist is deliberately longer than the digest size so that
+        dropped papers can be replaced by the next approved candidate. Only the
+        first ``target`` survivors are assessed; affiliation downloads stop as
+        soon as enough papers pass.
+        """
+        from .deep_reading import fetch_first_page_text
+        from .research_authority import assess_authority
+
+        kept: list[Paper] = []
+        assessed = 0
+        for paper in papers:
+            if len(kept) >= target:
+                break
+            assessed += 1
+            result = assess_authority(paper, settings, fetch_first_page_text)
+            if result.passed:
+                paper.authority_summary = result.summary
+                paper.authority_signals = result.signals
+                kept.append(paper)
+                logger.info("Authority pass title={} evidence={}", paper.title, result.summary)
+            else:
+                logger.info("Authority drop title={} (no venue/scholar/lab evidence)", paper.title)
+        logger.info(
+            "Authority gate: kept {} of {} assessed (target {})",
+            len(kept), assessed, target,
+        )
+        return kept
 
     def _enrich_papers(self, papers: list[Paper]) -> None:
         """Enrich the ordered final selection with one combined LLM call each."""

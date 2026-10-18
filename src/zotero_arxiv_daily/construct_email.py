@@ -179,6 +179,8 @@ def _render_paper_block(p:Paper, pinned:bool=False) -> str:
     paper_link += ' · 发布时间（' + escape(date_label) + '）：' + escape(p.published_date or "未取得，见论文页面")
     if p.updated_date and p.updated_date != p.published_date:
         paper_link += ' · 最近更新：' + escape(p.updated_date)
+    if p.authority_summary:
+        paper_link += ' · 学术背书：' + escape(p.authority_summary)
     if p.selection_reason:
         paper_link += ' · 入选依据：' + escape(p.selection_reason)
     if p.reading_basis is not None and not (p.tldr or "").startswith("【阅读依据】"):

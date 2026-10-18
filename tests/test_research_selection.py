@@ -38,6 +38,16 @@ def test_failed_screening_does_not_silently_send_unscreened_papers(monkeypatch):
         module.select_research_papers([paper("A")], None, config())
 
 
+def test_selection_can_return_a_backfill_pool(monkeypatch):
+    topics = ["agents", "hci", "llm", "mllm", "generative", "world_models"]
+    papers = [paper(str(i), 10 - i) for i in range(6)]
+    rows = [{"id": i, "fit": 4, "method_value": 4, "evidence": 3, "recommend": True,
+             "topic": topics[i], "reason": "具体的机制与评估设计"} for i in range(6)]
+    monkeypatch.setattr(module, "_request_llm", lambda *a: json.dumps({"papers": rows}))
+    result = module.select_research_papers(papers, None, config(), limit=4)
+    assert [p.title for p in result] == ["0", "1", "2", "3"]
+
+
 def test_duplicate_model_ids_rejected():
     row = {"id": 0, "fit": 4, "method_value": 4, "evidence": 3, "recommend": True, "topic": "hci", "reason": "设计"}
     with pytest.raises(ValueError, match="repeated"):

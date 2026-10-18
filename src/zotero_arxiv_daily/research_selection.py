@@ -35,11 +35,12 @@ def _parse_assessments(response, count):
     return rows
 
 
-def select_research_papers(papers: list[Paper], client, config) -> list[Paper]:
+def select_research_papers(papers: list[Paper], client, config, limit: int | None = None) -> list[Paper]:
     settings = config.research.selection
     shortlist = papers[:int(settings.get("max_candidates", 100))]
     if not shortlist:
         return []
+    target = int(limit) if limit is not None else int(config.research.digest_size)
     params = OmegaConf.to_container(config.llm, resolve=True)
     params["generation_kwargs"]["max_tokens"] = 7000
     if params.get("api_mode") == "chat_completion":
@@ -107,7 +108,7 @@ never lower the standard to fill a quota. These are screening estimates from abs
             continue
         selected.append(paper)
         topics[topic] = topics.get(topic, 0) + 1
-        if len(selected) >= int(config.research.digest_size):
+        if len(selected) >= target:
             break
-    logger.info("Research screening: {} candidates, {} approved, {} selected; topics={}", len(shortlist), len(approved), len(selected), topics)
+    logger.info("Research screening: {} candidates, {} approved, {} selected (target {}); topics={}", len(shortlist), len(approved), len(selected), target, topics)
     return selected
