@@ -51,6 +51,13 @@ def test_extra_scholars_extend_the_whitelist():
     assert scholar_signal(make_sample_paper(authors=["Jane Doe"]), custom.scholars) == "Jane Doe"
 
 
+def test_settings_read_omegaconf_values():
+    config = OmegaConf.create({"authority": {"enabled": True, "reserve": 5}})
+    settings = build_authority_settings(config)
+    assert settings.enabled is True
+    assert settings.reserve == 5
+
+
 def test_lab_signal_ignores_abstract_prose_and_substrings():
     paper = make_sample_paper(
         affiliation_text=(
