@@ -83,6 +83,12 @@ DEFAULT_LABS: dict[str, tuple[str, ...]] = {
     "Max Planck": ("max planck",),
     "ETH Zurich": ("eth zurich",),
     "EPFL": ("epfl",),
+    "Inria": ("inria", "inria paris", "inria grenoble", "inria sophia antipolis"),
+    "University College London": ("university college london", "ucl"),
+    "Chinese Academy of Sciences": ("chinese academy of sciences", "university of chinese academy of sciences", "ucas"),
+    "Bar-Ilan University": ("bar ilan university", "bar-ilan university"),
+    "NAVER AI Lab": ("naver ai lab", "naver"),
+    "Hong Kong Polytechnic University": ("hong kong polytechnic university", "polyu"),
     "MIT": ("massachusetts institute of technology", "mit csail", "csail"),
     "Stanford": ("stanford university", "stanford ai lab"),
     "UC Berkeley": ("university of california berkeley", "uc berkeley", "berkeley ai research", "bair"),
@@ -132,6 +138,9 @@ DEFAULT_LABS: dict[str, tuple[str, ...]] = {
 # normalization; common homonyms are intentionally omitted.
 DEFAULT_SCHOLARS: tuple[str, ...] = (
     "Yoshua Bengio", "Yann LeCun", "Geoffrey Hinton", "Ilya Sutskever",
+    "Adrien Bardes", "Mido Assran", "Nicolas Ballas", "Jean Ponce",
+    "Michael Rabbat", "Randall Balestriero", "Pascal Vincent", "Aaron Courville",
+    "Lingjie Liu", "Yoav Goldberg", "Qingming Huang",
     "Demis Hassabis", "Oriol Vinyals", "Koray Kavukcuoglu", "David Silver",
     "Nando de Freitas", "Raia Hadsell", "Satinder Singh", "Richard Sutton",
     "Andrew Barto", "Michael Littman", "Doina Precup", "Joelle Pineau",

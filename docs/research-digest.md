@@ -6,7 +6,7 @@
 
 ## 阅读偏好
 
-关注 LLM agents、多智能体、人机交互、游戏 agent、LLM、MLLM、生成模型和世界模型。配置保存在 `config/research.yaml`，实际运行使用仓库 Variable `CUSTOM_CONFIG` 中的同一份内容。
+关注 LLM agents、多智能体、人机交互、游戏 agent、LLM、MLLM、生成模型、世界模型，以及 JEPA/联合嵌入预测架构（I-JEPA、V-JEPA、潜空间预测与非生成式世界模型）。配置保存在 `config/research.yaml`，实际运行使用仓库 Variable `CUSTOM_CONFIG` 中的同一份内容。
 
 - 使用明确配置的兴趣作为相似度排序目标，无需 Zotero 账户或文库。
 - 检索 arXiv 新论文及 cross-list、最近三天 Hugging Face Daily Papers、Crossref 最近索引的会议论文。

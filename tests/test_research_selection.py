@@ -54,6 +54,13 @@ def test_duplicate_model_ids_rejected():
         module._parse_assessments(json.dumps({"papers": [row, row]}), 2)
 
 
+def test_jepa_is_a_supported_topic():
+    row = {"id": 0, "fit": 4, "method_value": 4, "evidence": 3,
+           "recommend": True, "topic": "jepa", "reason": "潜空间预测目标"}
+    rows = module._parse_assessments(json.dumps({"papers": [row]}), 1)
+    assert rows[0]["topic"] == "jepa"
+
+
 def test_keyword_overflow_never_overtakes_higher_ranked_nonmatches():
     executor = object.__new__(Executor)
     executor.config = OmegaConf.create({"executor": {"pin_keywords": ["world"], "max_pinned_num": 1}})

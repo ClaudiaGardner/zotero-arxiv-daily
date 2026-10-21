@@ -118,3 +118,5 @@ research:
       abstract: Generative models, diffusion models, flow matching, autoregressive generation, image synthesis, video generation, controllable generation and interactive content creation.
     - title: World models and model-based agents
       abstract: World models, learned dynamics, action-conditioned video generation, neural simulators, predictive environment models, planning with world models and model-based reinforcement learning.
+    - title: JEPA and joint-embedding predictive architectures
+      abstract: Joint embedding predictive architecture, JEPA, I-JEPA, V-JEPA, latent-space prediction, self-supervised representation learning, non-generative world models, energy-based models, predictive coding, representation-space planning and world-model pretraining for control and robotics.

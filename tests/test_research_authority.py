@@ -58,6 +58,13 @@ def test_settings_read_omegaconf_values():
     assert settings.reserve == 5
 
 
+def test_jepa_scholars_and_inria_are_recognized():
+    current = settings()
+    assert scholar_signal(make_sample_paper(authors=["Adrien Bardes"]), current.scholars) == "Adrien Bardes"
+    paper = make_sample_paper(affiliation_text="Inria Paris\nAbstract")
+    assert "Inria" in lab_signal(paper, current.labs)
+
+
 def test_lab_signal_ignores_abstract_prose_and_substrings():
     paper = make_sample_paper(
         affiliation_text=(
