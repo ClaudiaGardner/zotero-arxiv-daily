@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 import pymupdf
 import requests
+from loguru import logger
 from lxml import html
 
 from .protocol import PaperFigure
@@ -52,7 +53,14 @@ def html_main_figure(document_html, base_url):
             response.raise_for_status()
             if len(response.content) > 10 * 1024 * 1024:
                 continue
-            content = _jpeg(pymupdf.Pixmap(response.content))
+            try:
+                content = _jpeg(pymupdf.Pixmap(response.content))
+            except Exception as error:
+                # PyMuPDF raises FzErrorFormat for corrupt/truncated images,
+                # and it is not a RuntimeError. A missing figure must never
+                # abort the whole digest.
+                logger.info("Skipping undecodable HTML figure image: {}", type(error).__name__)
+                continue
             if content:
                 return PaperFigure(content, "image/jpeg", caption, url)
         except (requests.RequestException, ValueError, RuntimeError):
@@ -91,7 +99,11 @@ def pdf_main_figure(document, source_url):
             number = int(re.search(r"\d+", caption).group())
             candidates.append((figure_score(caption, number - 1), page_number, clip, caption))
     for _, page_number, clip, caption in sorted(candidates, key=lambda c: c[0], reverse=True):
-        content = _jpeg(document[page_number].get_pixmap(matrix=pymupdf.Matrix(2, 2), clip=clip, alpha=False))
+        try:
+            content = _jpeg(document[page_number].get_pixmap(matrix=pymupdf.Matrix(2, 2), clip=clip, alpha=False))
+        except Exception as error:
+            logger.info("Skipping undecodable PDF figure: {}", type(error).__name__)
+            continue
         if content:
             return PaperFigure(content, "image/jpeg", caption, source_url)
     return None

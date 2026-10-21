@@ -35,7 +35,15 @@ def enrich_final_papers(
         # thread before launching the concurrent LLM requests.
         for paper in papers:
             if paper.full_text is None or not paper.full_text.strip():
-                paper.full_text = fetch_reading_text(paper)
+                try:
+                    paper.full_text = fetch_reading_text(paper)
+                except Exception as error:
+                    logger.warning(
+                        "reading_text failure source={} exception_type={}",
+                        paper.source,
+                        type(error).__name__,
+                    )
+                    paper.full_text = None
         logger.info("Detailed reading complete: {}/{} papers with body text, {}/{} with main figures",
                     sum(bool(p.full_text) for p in papers), len(papers),
                     sum(p.main_figure is not None for p in papers), len(papers))

@@ -44,6 +44,21 @@ def test_inline_image_attachments_match_html_cids(config, monkeypatch):
     assert figures[0].get_payload(decode=True) == paper.main_figure.content
 
 
+def test_html_main_figure_skips_undecodable_image(monkeypatch):
+    from zotero_arxiv_daily import paper_figures
+
+    class Response:
+        content = b"<html>not an image</html>"
+        url = "https://arxiv.org/html/2610.12345v1"
+
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr(paper_figures.requests, "get", lambda *args, **kwargs: Response())
+    document = '<figure><img src="fig.png"><figcaption>Figure 1: Framework</figcaption></figure>'
+    assert paper_figures.html_main_figure(document, "https://arxiv.org/html/2610.12345v1") is None
+
+
 def test_preview_image_ids_with_shared_prefixes_remain_distinct():
     from zotero_arxiv_daily.construct_email import EmailHTML
     import base64

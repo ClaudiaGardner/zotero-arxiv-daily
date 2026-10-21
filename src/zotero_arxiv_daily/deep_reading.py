@@ -18,7 +18,11 @@ def fetch_reading_text(paper: Paper) -> str | None:
             response = requests.get(f"https://arxiv.org/html/{paper_id}", timeout=(8, 25))
             response.raise_for_status()
             from .paper_figures import html_main_figure
-            paper.main_figure = html_main_figure(response.text, response.url)
+            try:
+                paper.main_figure = html_main_figure(response.text, response.url)
+            except Exception as error:
+                paper.main_figure = None
+                logger.info("HTML figure extraction failed: {}", type(error).__name__)
             text = trafilatura.extract(response.text, include_tables=True, include_comments=False)
             if text and len(text) > 1500:
                 html_text = text
@@ -27,6 +31,8 @@ def fetch_reading_text(paper: Paper) -> str | None:
                     return text
         except (requests.RequestException, ValueError):
             pass
+        except Exception as error:
+            logger.info("HTML reading failed: {}", type(error).__name__)
     if paper.pdf_url:
         try:
             import pymupdf
@@ -41,7 +47,11 @@ def fetch_reading_text(paper: Paper) -> str | None:
             with pymupdf.open(stream=bytes(content), filetype="pdf") as document:
                 from .paper_figures import pdf_main_figure
                 if paper.main_figure is None:
-                    paper.main_figure = pdf_main_figure(document, paper.pdf_url)
+                    try:
+                        paper.main_figure = pdf_main_figure(document, paper.pdf_url)
+                    except Exception as error:
+                        paper.main_figure = None
+                        logger.info("PDF figure extraction failed: {}", type(error).__name__)
                 # Read the main paper and the last pages for limitations/conclusions.
                 pages = sorted(set(range(min(24, len(document)))) | set(range(max(0, len(document) - 3), len(document))))
                 text = "\n\n".join(document[p].get_text(sort=True) for p in pages)
@@ -51,6 +61,8 @@ def fetch_reading_text(paper: Paper) -> str | None:
                 return html_text or text
         except (requests.RequestException, ValueError, RuntimeError):
             pass
+        except Exception as error:
+            logger.info("PDF reading failed: {}", type(error).__name__)
     if html_text:
         return html_text
     paper.reading_basis = "仅摘要（全文未取得）"
@@ -84,6 +96,9 @@ def fetch_first_page_text(paper: Paper) -> str | None:
             return document[0].get_text(sort=True)
     except (requests.RequestException, ValueError, RuntimeError):
         logger.info("First-page affiliation text unavailable: {}", paper.title)
+        return None
+    except Exception as error:
+        logger.info("First-page affiliation text failed ({}): {}", type(error).__name__, paper.title)
         return None
 
 
