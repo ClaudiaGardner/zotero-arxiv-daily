@@ -10,9 +10,6 @@ on:
         description: 'Re-analyze recent papers including already sent papers for a revised digest'
         type: boolean
         default: false
-  schedule:
-    # 09:07 Asia/Shanghai (UTC+8), away from the busy start of the hour.
-    - cron: '7 1 * * *'
 
 concurrency:
   group: sent-doi-state-v1

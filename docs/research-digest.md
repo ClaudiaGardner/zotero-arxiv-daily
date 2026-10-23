@@ -2,7 +2,7 @@
 
 部署仓库：https://github.com/ClaudiaGardner/zotero-arxiv-daily
 
-每天北京时间 09:07 由 GitHub Actions 启动（UTC cron：`7 1 * * *`），收件人为 `RECEIVER` Secret 中的邮箱。避开整点调度高峰；Actions 可能延迟启动，邮件在检索、排序和生成摘要完成后发送。
+每天北京时间 09:00 左右发送。GitHub 自带的 `schedule` 会延迟数小时，因此改由 `Digest scheduler` 工作流每 30 分钟唤醒一次，只在亚洲/上海时间 08:40–09:40 内触发 `Send emails daily`；当天已成功发送后不再重复触发。收件人为 `RECEIVER` Secret 中的邮箱。
 
 ## 阅读偏好
 
@@ -37,9 +37,9 @@ https://github.com/ClaudiaGardner/zotero-arxiv-daily/settings/secrets/actions/ne
 
 ## 验证与维护
 
-Fork 后先在仓库 Actions 页面点击 “I understand my workflows, go ahead and enable them”，再分别启用 “Send emails daily” 和 “Keep Alive”。确认两者状态为 `active`，而不是 `disabled_fork`。仅能手动运行不代表自动调度已启用。
+Fork 后先在仓库 Actions 页面点击 “I understand my workflows, go ahead and enable them”，再分别启用 “Send emails daily”、“Digest scheduler” 和 “Keep Alive”。确认三者状态为 `active`，而不是 `disabled_fork`。仅能手动运行不代表自动调度已启用。
 
-自动调度以 Actions 中事件为 `schedule` 的实际运行记录为验证依据；`workflow_dispatch` 只证明手动运行成功。
+自动调度以 `Digest scheduler` 的 `schedule` 运行记录和它触发的 `Send emails daily` 记录为准。调度器每 30 分钟检查一次，只在 08:40–09:40（Asia/Shanghai）触发，并通过 `sent-doi-state-v1` 分支的最后提交日期判断当天是否已经发送。
 
 在 Actions 的 “Send emails daily” 工作流中选择 “Run workflow”：
 
