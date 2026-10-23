@@ -139,3 +139,13 @@ def test_email_renders_authority_evidence():
     )
     html = render_email([paper])
     assert "学术背书：NeurIPS 2026（会议）；Yoshua Bengio（学者）" in html
+
+
+def test_embodied_and_edge_coverage_is_recognized():
+    current = settings()
+    embodied = make_sample_paper(affiliation_text="Physical Intelligence\nAbstract")
+    edge = make_sample_paper(affiliation_text="Qualcomm AI Research\nAbstract")
+    assert "Physical Intelligence" in lab_signal(embodied, current.labs)
+    assert "Qualcomm AI Research" in lab_signal(edge, current.labs)
+    assert scholar_signal(make_sample_paper(authors=["Jim Fan"]), current.scholars) == "Jim Fan"
+    assert scholar_signal(make_sample_paper(authors=["Song Han"]), current.scholars) == "Song Han"

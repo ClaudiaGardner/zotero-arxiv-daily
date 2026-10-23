@@ -61,6 +61,17 @@ def test_jepa_is_a_supported_topic():
     assert rows[0]["topic"] == "jepa"
 
 
+def test_embodied_and_edge_are_supported_topics():
+    rows = [
+        {"id": 0, "fit": 4, "method_value": 4, "evidence": 3,
+         "recommend": True, "topic": "embodied", "reason": "机器人操作策略"},
+        {"id": 1, "fit": 4, "method_value": 4, "evidence": 3,
+         "recommend": True, "topic": "edge", "reason": "端侧量化部署"},
+    ]
+    parsed = module._parse_assessments(json.dumps({"papers": rows}), 2)
+    assert [row["topic"] for row in parsed] == ["embodied", "edge"]
+
+
 def test_keyword_overflow_never_overtakes_higher_ranked_nonmatches():
     executor = object.__new__(Executor)
     executor.config = OmegaConf.create({"executor": {"pin_keywords": ["world"], "max_pinned_num": 1}})

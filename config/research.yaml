@@ -33,7 +33,7 @@ llm:
 
 source:
   arxiv:
-    category: [cs.AI, cs.HC, cs.LG, cs.CL, cs.CV, cs.MA, cs.RO]
+    category: [cs.AI, cs.HC, cs.LG, cs.CL, cs.CV, cs.MA, cs.RO, cs.AR, cs.DC]
     include_cross_list: true
     rss_metadata: true
     rss_fallback_days: 7
@@ -120,3 +120,7 @@ research:
       abstract: World models, learned dynamics, action-conditioned video generation, neural simulators, predictive environment models, planning with world models and model-based reinforcement learning.
     - title: JEPA and joint-embedding predictive architectures
       abstract: Joint embedding predictive architecture, JEPA, I-JEPA, V-JEPA, latent-space prediction, self-supervised representation learning, non-generative world models, energy-based models, predictive coding, representation-space planning and world-model pretraining for control and robotics.
+    - title: Embodied agents and robot learning
+      abstract: Embodied AI, embodied agents, vision-language-action policies, robot manipulation, navigation, sim-to-real transfer, learning from demonstration, interactive robot decision making and evaluation in physical or simulated environments.
+    - title: On-device and edge deployment for robots
+      abstract: On-device and edge deployment of robot policies, efficient inference, quantization, pruning, distillation, real-time control, onboard perception, embedded accelerators, latency and memory constraints, and deployment from simulation to real robots.
