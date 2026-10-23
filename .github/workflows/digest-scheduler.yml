@@ -19,6 +19,10 @@ on:
         description: 'Dispatch a preview instead of a real send'
         type: boolean
         default: false
+      ignore_sent:
+        description: 'Dispatch even if today already sent (manual recovery only)'
+        type: boolean
+        default: false
 
 permissions:
   actions: write
@@ -53,6 +57,8 @@ jobs:
 
             const rawForce = context.payload.inputs?.force;
             const force = rawForce === true || rawForce === 'true';
+            const rawIgnore = context.payload.inputs?.ignore_sent;
+            const ignoreSent = rawIgnore === true || rawIgnore === 'true';
             const today = dateFmt.format(now);
 
             let sentToday = false;
@@ -68,11 +74,11 @@ jobs:
               core.info(`State branch unavailable: ${error.status || error.message}`);
             }
 
-            const due = (inWindow || force) && !sentToday;
+            const due = (inWindow || force) && (!sentToday || ignoreSent);
             core.setOutput('due', String(due));
             core.info(
               `Beijing ${timeFmt.format(now)} inWindow=${inWindow} ` +
-              `force=${force} sentToday=${sentToday} due=${due}`
+              `force=${force} sentToday=${sentToday} ignoreSent=${ignoreSent} due=${due}`
             );
 
       - name: Dispatch the digest
