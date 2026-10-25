@@ -10,6 +10,10 @@ on:
         description: 'Re-analyze recent papers including already sent papers for a revised digest'
         type: boolean
         default: false
+  schedule:
+    # GitHub's scheduler usually starts this several hours late; the digest is
+    # still sent once per day. 01:07 UTC is 09:07 Asia/Shanghai.
+    - cron: '7 1 * * *'
 
 concurrency:
   group: sent-doi-state-v1

@@ -73,48 +73,14 @@ def test_nonsecret_controls_are_exported_from_variables_with_safe_defaults(
     }
 
 
-def test_main_workflow_is_dispatch_only() -> None:
+def test_main_workflow_has_native_daily_schedule() -> None:
     # Given the production workflow trigger map.
     trigger = load_workflow("main.yml")["on"]
     assert isinstance(trigger, dict)
 
-    # When its triggers are inspected, then the delayed daily schedule is gone.
+    # When its schedule is inspected, then GitHub owns the daily trigger.
+    assert trigger["schedule"] == [{"cron": "7 1 * * *"}]
     assert "workflow_dispatch" in trigger
-    assert "schedule" not in trigger
-
-
-def test_digest_scheduler_wakes_every_thirty_minutes_and_dispatches_the_digest() -> None:
-    # Given the scheduler workflow.
-    workflow = load_workflow("digest-scheduler.yml")
-    trigger = workflow["on"]
-    assert isinstance(trigger, dict)
-
-    # When its trigger and dispatch contract are inspected.
-    assert trigger["schedule"] == [{"cron": "*/30 * * * *"}]
-    permissions = workflow["permissions"]
-    assert permissions == {"actions": "write", "contents": "read"}
-
-    jobs = workflow["jobs"]
-    assert isinstance(jobs, dict)
-    job = jobs["dispatch"]
-    assert isinstance(job, dict)
-    steps = job["steps"]
-    assert isinstance(steps, list)
-    gate, dispatch = steps
-    script = gate["with"]["script"]
-    assert isinstance(script, str)
-    assert "Asia/Shanghai" in script
-    assert "8 * 60 + 40" in script
-    assert "9 * 60 + 40" in script
-    assert "sent-doi-state-v1" in script
-
-    # Then only the due step dispatches the real digest.
-    assert dispatch["if"] == "steps.gate.outputs.due == 'true'"
-    command = dispatch["run"]
-    assert isinstance(command, str)
-    assert "gh workflow run main.yml" in command
-    assert '-f preview="$PREVIEW"' in command
-    assert "-f refresh_digest=false" in command
 
 
 def test_test_workflow_remains_manual_only() -> None:
