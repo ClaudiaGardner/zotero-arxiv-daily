@@ -11,9 +11,9 @@ on:
         type: boolean
         default: false
   schedule:
-    # GitHub's scheduler usually starts this several hours late; the digest is
-    # still sent once per day. 01:07 UTC is 09:07 Asia/Shanghai.
-    - cron: '7 1 * * *'
+    # 20:23 UTC is 04:23 Asia/Shanghai. GitHub's scheduler has been starting
+    # daily runs about 4h50m late, so this lands near 09:10-09:25 Beijing.
+    - cron: '23 20 * * *'
 
 concurrency:
   group: sent-doi-state-v1

@@ -2,7 +2,7 @@
 
 部署仓库：https://github.com/ClaudiaGardner/zotero-arxiv-daily
 
-每天由 GitHub Actions 的 `schedule` 触发（UTC cron：`7 1 * * *`，即北京时间 09:07）；GitHub 的调度队列通常会把实际启动推迟几个小时，但每天仍会发送一次。收件人为 `RECEIVER` Secret 中的邮箱。
+每天由 GitHub Actions 的 `schedule` 触发（UTC cron：`23 20 * * *`，即北京时间 04:23）；GitHub 的调度队列通常会推迟约 4 小时 50 分钟，因此实际到信时间约为北京时间 09:10–09:25。如果 GitHub 的延迟明显变化，到信时间也会随之提前或推迟。收件人为 `RECEIVER` Secret 中的邮箱。
 
 ## 阅读偏好
 

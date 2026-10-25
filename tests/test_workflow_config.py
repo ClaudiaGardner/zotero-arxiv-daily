@@ -78,8 +78,9 @@ def test_main_workflow_has_native_daily_schedule() -> None:
     trigger = load_workflow("main.yml")["on"]
     assert isinstance(trigger, dict)
 
-    # When its schedule is inspected, then GitHub owns the daily trigger.
-    assert trigger["schedule"] == [{"cron": "7 1 * * *"}]
+    # When its schedule is inspected, then GitHub owns the daily trigger and the
+    # cron is shifted earlier to absorb GitHub's multi-hour scheduler delay.
+    assert trigger["schedule"] == [{"cron": "23 20 * * *"}]
     assert "workflow_dispatch" in trigger
 
 
