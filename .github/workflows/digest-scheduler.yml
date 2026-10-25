@@ -74,11 +74,28 @@ jobs:
               core.info(`State branch unavailable: ${error.status || error.message}`);
             }
 
-            const due = (inWindow || force) && (!sentToday || ignoreSent);
+            let activeToday = false;
+            try {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'main.yml',
+                per_page: 10,
+              });
+              activeToday = runs.data.workflow_runs.some((run) => {
+                const active = ['queued', 'in_progress', 'requested', 'waiting', 'pending'].includes(run.status);
+                return active && dateFmt.format(new Date(run.created_at)) === today;
+              });
+            } catch (error) {
+              core.info(`Run history unavailable: ${error.status || error.message}`);
+            }
+
+            const due = (inWindow || force) && (!sentToday || ignoreSent) && !activeToday;
             core.setOutput('due', String(due));
             core.info(
               `Beijing ${timeFmt.format(now)} inWindow=${inWindow} ` +
-              `force=${force} sentToday=${sentToday} ignoreSent=${ignoreSent} due=${due}`
+              `force=${force} sentToday=${sentToday} activeToday=${activeToday} ` +
+              `ignoreSent=${ignoreSent} due=${due}`
             );
 
       - name: Dispatch the digest
